@@ -12,7 +12,12 @@
     name: 'home',  // 修改这里，将名称改为 'home'
 以保证导航栏的首页按钮正常指向
 
-2.UserController.java文件下额外添加33行：
+2.UserController.java文件下额外添加33、34行：
     response.put("userid",user.getUserId()); //返回id
+    response.put("role", user.getRole());//返回用户角色（admin/merchant）
 以此可以在界面右上角中显示id
 
+3. 添加了 AdminNavbar.vue 用于管理员的导航栏
+
+4.修改了Home.vue代码，实现：
+    根据role不同，加载不同的导航栏

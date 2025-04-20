@@ -26,7 +26,7 @@
 
 <script>
 export default {
-  name: 'AppNavbar', // 组件名称
+  name: 'AppMerchantNavbar', // 组件名称
   data() {
     return {
       activeIndex: 'home' // 设定默认激活的菜单项为首页

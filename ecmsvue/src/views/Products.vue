@@ -99,11 +99,11 @@
 <script>
 import axios from 'axios'; // 引入 axios 库进行 HTTP 请求
 import { ElMessage } from 'element-plus'; // 引入 Element Plus 的消息组件
-import AppNavbar from "@/components/Navbar.vue"; // 引入导航栏组件
+import AppMerchantNavbar from "@/components/MerchantNavbar.vue"; // 引入导航栏组件
 
 export default {
   name: 'ProductManagement', // 组件名称
-  components: { AppNavbar }, // 注册导航栏组件
+  components: { AppNavbar: AppMerchantNavbar }, // 注册导航栏组件
   data() {
     return {
       products: [], // 产品数组

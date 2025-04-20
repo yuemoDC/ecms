@@ -84,11 +84,11 @@
 <script>
 import axios from 'axios'; // 引入 axios 库进行 HTTP 请求
 import { ElMessage, ElMessageBox } from 'element-plus'; // 引入 Element Plus 的消息和确认框组件
-import AppNavbar from "@/components/Navbar.vue"; // 引入导航栏组件
+import AppMerchantNavbar from "@/components/MerchantNavbar.vue"; // 引入导航栏组件
 
 export default {
   name: 'OrderManagement', // 组件名称
-  components: { AppNavbar }, // 注册导航栏组件
+  components: { AppNavbar: AppMerchantNavbar }, // 注册导航栏组件
   data() {
     return {
       orders: [], // 订单数据列表

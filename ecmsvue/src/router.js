@@ -44,7 +44,7 @@ const routes = [
         path: '/merchant-applications',
         name: 'merchant-applications',
         component: MerchantApplicationList,
-    }
+    },
 ];
 
 const router = createRouter({

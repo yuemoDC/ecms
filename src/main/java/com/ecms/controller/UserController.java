@@ -31,6 +31,7 @@ public class UserController {
                 response.put("token", "dummy-token-" + username); // 示例 token，实际应使用JWT
                 response.put("username", username); // 返回用户名
                 response.put("userid",user.getUserId()); //返回id
+                response.put("role", user.getRole());//返回用户角色（admin/merchant）
                 return ResponseEntity.ok(response);
             } else { // 登录失败
                 Map<String, Object> response = new HashMap<>();

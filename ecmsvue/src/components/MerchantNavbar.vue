@@ -14,9 +14,14 @@
 
 
       <!-- 登出按钮放在最右边 -->
-      <div class="logout-wrapper">
-        <el-menu-item index="logout" @click="handleLogout">登出</el-menu-item> <!-- 登出菜单项 -->
-      </div>
+        <div class="logout-wrapper">
+          <!-- 日夜模式按钮 -->
+          <div class="theme-toggle" @click="toggleTheme">
+            {{ isDark ? '☀️ 日间模式' : '🌙 夜间模式' }}
+          </div>
+          <!-- 登出按钮 -->
+          <el-menu-item index="logout" @click="handleLogout">登出</el-menu-item>
+        </div>
 
 
       </el-menu>
@@ -29,7 +34,8 @@ export default {
   name: 'AppMerchantNavbar', // 组件名称
   data() {
     return {
-      activeIndex: 'home' // 设定默认激活的菜单项为首页
+      activeIndex: 'home', // 设定默认激活的菜单项为首页
+      isDark: false
     };
   },
   methods: {
@@ -39,30 +45,94 @@ export default {
       this.activeIndex = index; // 更新选中的菜单项
       this.$router.push({ name: index }); // 根据选中项跳转到对应的路由
     },
+    toggleTheme() {
+      this.isDark = !this.isDark;
+      localStorage.setItem('theme', this.isDark ? 'dark' : 'light');
+      this.applyTheme();
+    },
     handleLogout() {
       // 处理用户登出
       localStorage.removeItem('token'); // 清除本地存储中的 token
       this.$router.push('/login'); // 跳转到登录页面
+    },
+    applyTheme() {
+      document.body.classList.toggle('dark-mode', this.isDark);
     }
   }
 };
 </script>
 
 <style scoped>
+.logout-wrapper {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 20px; /* 添加间隔让按钮有点距离 */
+}
+
 .navbar {
-  background-color: #409eff; /* 设置导航栏背景颜色 */
-  color: #ffffff; /* 设置文本颜色 */
-  display: flex; /* 使用 flexbox 布局 */
-  justify-content: space-between; /* 两端对齐 */
-  align-items: center; /* 垂直居中对齐 */
+  background-color: #409eff;
+  color: #ffffff;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  width: 100%;
+  border: none;
 }
 
 .menu {
-  line-height: 60px; /* 设置菜单项的行高 */
-  width: 100%; /* 菜单宽度为100% */
+  line-height: 60px;
+  flex-grow: 1;
+  display: flex;
+  align-items: center;
+  border: none;
 }
 
-.logout-wrapper {
-  margin-left: auto; /* 将登出按钮推到右侧 */
+.theme-toggle {
+  padding: 0 20px;
+  height: 60px;
+  line-height: 60px;
+  cursor: pointer;
+  color: #000;
+  font-size: 14px;
+  transition: background-color 0.3s;
+  white-space: nowrap;
+  user-select: none;
+  border: none;
+  outline: none;
+}
+
+.theme-toggle:hover {
+  background-color: rgba(0, 0, 0, 0.1); /* 悬停效果 */
+}
+
+.theme-toggle:active {
+  background-color: transparent;
+  color: inherit;
+}
+
+.el-menu .el-menu-item {
+  outline: none;
+  border: none;
+  height: 60px;
+  line-height: 60px;
+}
+
+.el-menu .el-menu-item:focus {
+  outline: none;
+  border: none;
+}
+
+.el-menu {
+  border: none;
+  outline: none;
+}
+</style>
+
+<style>
+/* 暗黑模式全局背景 */
+body.dark-mode {
+  background-color: #000000;
+  color: #ffffff;
 }
 </style>

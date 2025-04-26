@@ -3,10 +3,14 @@
     <div class="navbar"> <!-- 导航栏容器 -->
       <el-menu :default-active="activeIndex" class="menu" @select="handleSelect" mode="horizontal">
         <!-- 设置默认选中的菜单项 -->
-        <el-menu-item index="dashboard">仪表盘</el-menu-item> <!-- 仪表盘菜单项 -->
-        <el-menu-item index="userManagement">用户管理</el-menu-item> <!-- 用户管理菜单项 -->
-        <el-menu-item index="roleManagement">角色管理</el-menu-item> <!-- 角色管理菜单项 -->
-        <el-menu-item index="systemSettings">系统设置</el-menu-item> <!-- 系统设置菜单项 -->
+        <el-menu-item index="home">首页</el-menu-item> <!-- 仪表盘菜单项 -->
+        <el-menu-item index="merchant-applications">商家入驻审批</el-menu-item>
+        <el-menu-item index="data-visualization">可视化管理</el-menu-item> <!-- 角色管理菜单项 -->
+        <el-sub-menu @click="handleSubmenuClick">
+          <template v-slot:title>AI助手</template>
+          <el-menu-item index="data-SalesPrediction">商家AI预测</el-menu-item>
+          <el-menu-item index="bulkPrediction">商家预测对比</el-menu-item>
+        </el-sub-menu>
 
         <!-- 登出按钮放在最右边 -->
         <div class="logout-wrapper">
@@ -19,24 +23,65 @@
 
 <script>
 export default {
-  name: 'AdminNavbar', // 组件名称
+  name: 'AppAdminNavbar',
   data() {
     return {
-      activeIndex: 'dashboard' // 设定默认激活的菜单项为仪表盘
+      activeIndex: 'home' // 默认值设为 home
     };
   },
+  created() {
+    // 检查 localStorage 中是否有 activeIndex，如果没有则设置为 home
+    if (!localStorage.getItem('activeIndex')) {
+      localStorage.setItem('activeIndex', 'home');
+    }
+    this.updateActiveIndex(); // 初始化 activeIndex
+  },
+  watch: {
+    '$route.path'() {
+      this.updateActiveIndex(); // 路由变化时更新 activeIndex
+    }
+  },
   methods: {
+    updateActiveIndex() {
+      const path = this.$route.path;
+      if (path === '/home') {
+        this.activeIndex = 'home';
+      } else if (path === '/merchant-applications') {
+        this.activeIndex = 'merchant-applications';
+      } else if (path === '/data-visualization') {
+        this.activeIndex = 'data-visualization';
+      } else if (path === '/systemSettings') {
+        this.activeIndex = 'systemSettings';
+      } else if (path === '/data-SalesPrediction') {
+        this.activeIndex = 'data-SalesPrediction';
+      } else {
+        this.activeIndex = ''; // 其他情况设为空
+      }
+      localStorage.setItem('activeIndex', this.activeIndex); // 更新 localStorage
+    },
     handleSelect(index) {
-      // 当选择菜单项时调用此方法
-      if (index === 'logout') return; // 防止重复执行登出逻辑
-      this.activeIndex = index; // 更新选中的菜单项
-      this.$router.push({ name: index }); // 根据选中项跳转到对应的路由
+      if (index === 'logout') return;
+      this.activeIndex = index;
+      localStorage.setItem('activeIndex', index);
+      this.$router.push({
+        name: index,
+        meta: { transition: 'slide' } // 添加过渡标记
+      });
     },
     handleLogout() {
       // 处理用户登出
       localStorage.removeItem('token'); // 清除本地存储中的 token
+      localStorage.removeItem('activeIndex'); // 清除保存的状态
+      this.activeIndex = 'home'; // 设置默认的激活菜单项
       this.$router.push('/login'); // 跳转到登录页面
+    },
+    handleSubmenuClick() {
+      this.$router.push({
+        path: '/AIhome',
+        meta: { transition: 'slide' }
+      });
     }
+
   }
 };
 </script>

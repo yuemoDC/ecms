@@ -1,4 +1,5 @@
 <template>
+  <AppNavbar />
   <el-container>
     <el-header>
       <h2>商家入驻申请管理</h2>
@@ -62,13 +63,6 @@
             >
               编辑
             </el-button>
-            <el-button
-                @click="deleteApplication(scope.row)"
-                type="danger"
-                size="small"
-            >
-              删除
-            </el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -121,9 +115,14 @@
 import { ref, onMounted } from 'vue';
 import { ElMessage } from 'element-plus';
 import axios from 'axios';
+import AppNavbar from "@/components/AdminNavbar.vue";
+
 
 export default {
   name: 'MerchantApplicationList',
+  components: {
+    AppNavbar
+  },
   setup() {
     const applications = ref([]);
     const filteredApplications = ref([]);
@@ -285,13 +284,7 @@ export default {
 </script>
 
 <style scoped>
-.el-container {
-  margin-top: 20px;
-}
-.el-header {
-  background: #f5f7fa;
-  padding: 20px;
-}
+
 .toolbar {
   margin-bottom: 20px;
 }

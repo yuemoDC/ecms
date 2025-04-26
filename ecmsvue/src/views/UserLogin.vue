@@ -61,7 +61,7 @@ const handleLogin = async () => { // 登录处理函数
           ElMessage.success('登录成功') // 显示成功消息
           localStorage.setItem('token', response.data.token) // 存储token
           localStorage.setItem('user', JSON.stringify(response.data)); // 存储用户信息（转成字符串）
-          router.push('/home') // 导航到主页
+          router.push('/SplashScreen') // 导航到主页
         } else {
           ElMessage.error(response.data.message || '登录失败') // 显示错误消息
         }

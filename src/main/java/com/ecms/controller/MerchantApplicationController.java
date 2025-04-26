@@ -16,10 +16,7 @@ public class MerchantApplicationController {
     @Autowired
     private MerchantApplicationService merchantApplicationService;
 
-    @GetMapping
-    public List<MerchantApplication> getAllMerchantApplications() {
-        return merchantApplicationService.getAllApplications();
-    }
+
 
     @GetMapping("/{id}")
     public ResponseEntity<MerchantApplication> getMerchantApplicationById(@PathVariable Integer id) {
@@ -73,4 +70,15 @@ public class MerchantApplicationController {
         MerchantApplication application = merchantApplicationService.rejectApplication(id);
         return application != null ? ResponseEntity.ok(application) : ResponseEntity.notFound().build();
     }
+    @GetMapping
+    public List<MerchantApplication> getAllMerchantApplications(@RequestParam(required = false) Integer userId) {
+        System.out.println("Received userId: " + userId);// 如果有 userId 参数，则返回该用户的商家申请，否则返回所有商家的申请
+        if (userId != null) {
+            return merchantApplicationService.getApplicationsByUserId(userId);
+        } else {
+            return merchantApplicationService.getAllApplications();
+        }
+    }
+
+
 }

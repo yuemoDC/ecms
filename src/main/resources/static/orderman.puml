@@ -1,0 +1,56 @@
+@startuml OrderManagement_Simplified
+
+title 订单管理核心流程（商家与管理员）
+skinparam activity {
+  BackgroundColor #FFF
+  BorderColor #2F4F4F
+  FontSize 13
+}
+
+start
+partition "商家操作" {
+  :收到新订单通知;
+  if (库存充足?) then (是)
+    :确认订单;
+    fork
+      :生成发货单;
+    fork again
+      :通知仓库备货;
+    end fork
+    :打包商品;
+    :录入物流单号;
+  else (否)
+    :标记"缺货"状态;
+    :通知采购补货;
+    stop
+  endif
+}
+
+partition "管理员监控" {
+  :系统检测异常订单;
+  if (需人工干预?) then (是)
+    fork
+      :[商家] 修改订单信息;
+    fork again
+      :[管理员] 强制取消订单;
+    end fork
+    :记录操作日志;
+  endif
+}
+
+partition "状态同步" {
+  :更新订单状态;
+  :同步至消费者端;
+  stop
+}
+
+note right
+  **核心参与者**：
+  1. 商家：处理常规订单流程
+  2. 管理员：处理异常情况
+  **符号应用**：
+  ▶ 分叉(fork)用于并行任务
+  ▶ 菱形(if)表示业务决策点
+end note
+
+@enduml

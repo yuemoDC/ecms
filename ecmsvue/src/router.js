@@ -5,6 +5,12 @@ import HomePage from '../src/views/Home.vue';
 import UserLoginPage from './views/UserLogin.vue';
 import UserRegisterPage from './views/UserRegister.vue';
 import MerchantApplicationList from './views/MerchantApplicationList.vue';  // 商家入驻申请管理
+import SalesPredictionView from './views/SalesPrediction.vue';
+import AdminDataVisualizationView from './views/AdminDataVisualizationView.vue'
+import MerchantApplication from "@/views/MerchantApplication.vue";
+import BulkSalesPredictionView from'./views/BulkSalesPrediction.vue';
+import AIhome from "@/views/AIhome.vue";
+import SplashScreen from "@/animation/SplashScreen.vue";
 
 
 const routes = [
@@ -45,6 +51,40 @@ const routes = [
         name: 'merchant-applications',
         component: MerchantApplicationList,
     },
+    {
+        path: '/merchant-application',
+        name: 'merchant-application',
+        component: MerchantApplication,
+        meta: { requiresAuth: true }
+    },
+    {
+        path: '/data-visualization',
+        name: 'data-visualization',
+        component: AdminDataVisualizationView,
+    },
+    {
+        path: '/data-SalesPrediction',
+        name: 'data-SalesPrediction',
+        component: SalesPredictionView,
+        meta: { transition: 'slide' }
+    },
+    {
+        path: '/bulkPrediction',
+        name: 'bulkPrediction',
+        component: BulkSalesPredictionView,
+        meta: { transition: 'slide' }
+    },
+    {
+        path: '/AIhome',
+        name: 'AIhome',
+        component: AIhome,
+        meta: { transition: 'slide' }
+    },
+    {
+        path: '/SplashScreen',
+        name: 'SplashScreen',
+        component: SplashScreen,
+    }
 ];
 
 const router = createRouter({

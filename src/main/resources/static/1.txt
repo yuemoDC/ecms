@@ -1,0 +1,1276 @@
+// views/SalesPredictionView.vue
+<template>
+  <div class="sales-prediction-container">
+    <h1 class="page-title">智能销售预测分析</h1>
+
+    <!-- 预测参数设置卡片 -->
+    <div class="card filters-card">
+      <div class="card-header">
+        <div class="card-title">
+          <i class="icon-settings"></i>预测参数设置
+        </div>
+        <p class="card-subtitle">设置参数后点击预测按钮查看分析结果</p>
+      </div>
+
+      <div class="filters">
+        <div class="form-group">
+          <label for="merchantId">商家ID<span class="required">*</span></label>
+          <input
+              id="merchantId"
+              v-model.number="merchantId"
+              type="number"
+              min="1"
+              class="form-control"
+              placeholder="请输入商家ID"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="viewType">分析模式<span class="required">*</span></label>
+          <select id="viewType" v-model="selectedView" class="form-control">
+            <option value="all">所有产品总体预测</option>
+            <option value="product">单个产品详细分析</option>
+          </select>
+        </div>
+
+        <div v-if="selectedView === 'product'" class="form-group">
+          <label for="daysPredict">预测天数</label>
+          <input
+              id="daysPredict"
+              v-model.number="daysToPredict"
+              type="number"
+              min="1"
+              max="365"
+              class="form-control"
+              placeholder="默认30天"
+          />
+        </div>
+      </div>
+
+      <!-- 产品列表获取按钮 -->
+      <div class="action-buttons" v-if="selectedView === 'product'">
+        <button @click="fetchProducts" class="btn btn-outline" :disabled="loadingProducts || !merchantId">
+          <i class="icon-refresh"></i>
+          {{ loadingProducts ? '获取中...' : '获取产品列表' }}
+        </button>
+      </div>
+
+      <!-- 产品选择卡片区域 -->
+      <div v-if="selectedView === 'product' && products.length > 0" class="product-selection-container">
+        <h3 class="section-title">选择要预测的产品</h3>
+        <div class="product-selection">
+          <div
+              v-for="product in products"
+              :key="product.productId"
+              class="product-selection-item"
+              :class="{ 'selected': selectedProductId === product.productId }"
+              @click="selectProduct(product.productId)"
+          >
+            <div class="product-selection-header">
+              <h4 class="product-title">{{ product.productName || `产品 #${product.productId}` }}</h4>
+              <div class="product-price">¥{{ product.price || '0.00' }}</div>
+            </div>
+            <div class="product-description">
+              {{ product.description ? (product.description.length > 60 ? product.description.substring(0, 60) + '...' : product.description) : '暂无描述' }}
+            </div>
+            <div class="product-selection-footer">
+              <div class="product-id">ID: {{ product.productId }}</div>
+              <div class="selection-indicator">
+                <i v-if="selectedProductId === product.productId" class="icon-check"></i>
+                <span v-else>点击选择</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 开始预测按钮 -->
+      <div class="action-buttons action-predict">
+        <button
+            @click="startPrediction"
+            class="btn btn-primary"
+            :disabled="loading || !isFormValid"
+        >
+          <i class="icon-chart"></i>
+          {{ loading ? '分析中...' : '开始预测分析' }}
+        </button>
+      </div>
+
+      <div v-if="formError" class="form-error">
+        <i class="icon-error"></i> {{ formError }}
+      </div>
+    </div>
+
+    <!-- 预测结果卡片 -->
+    <div v-if="showResults" class="card data-card">
+      <div class="card-header">
+        <div class="card-title">
+          <i class="icon-chart"></i>预测结果分析
+        </div>
+        <p class="card-subtitle">
+          {{ selectedView === 'all' ? '所有产品总体销售趋势预测' :
+            (selectedProductName ? `${selectedProductName} 销售趋势预测` : `产品 #${selectedProductId} 销售趋势预测`) }}
+        </p>
+      </div>
+
+      <div v-if="loading" class="loading-container">
+        <div class="spinner"></div>
+        <p>正在分析数据，请稍候...</p>
+      </div>
+
+      <div v-else-if="error" class="error-container">
+        <div class="alert alert-danger">
+          <i class="icon-error"></i> {{ error }}
+        </div>
+        <button @click="startPrediction" class="btn btn-primary">
+          <i class="icon-refresh"></i> 重新分析
+        </button>
+      </div>
+
+      <div v-else-if="predictionData.dates.length > 0" class="prediction-content">
+        <!-- 图表区域 -->
+        <div class="chart-container">
+          <Line :data="chartData" :options="chartOptions" />
+        </div>
+
+        <!-- 分析摘要 -->
+        <div class="stats-container">
+          <h3 class="stats-title">
+            <i class="icon-analytics"></i>预测数据摘要
+          </h3>
+          <div class="stats-grid">
+            <div class="stat-item">
+              <div class="stat-label">预测周期</div>
+              <div class="stat-value">{{ predictionData.dates[0] }} 至 {{ predictionData.dates[predictionData.dates.length - 1] }}</div>
+            </div>
+
+            <div class="stat-item">
+              <div class="stat-label">平均预测销售额</div>
+              <div class="stat-value">¥{{ calculateAverage(predictionData.predictions).toFixed(2) }}</div>
+            </div>
+
+            <div class="stat-item">
+              <div class="stat-label">最高预测销售额</div>
+              <div class="stat-value">¥{{ Math.max(...predictionData.predictions).toFixed(2) }}</div>
+            </div>
+
+            <div class="stat-item">
+              <div class="stat-label">最低预测销售额</div>
+              <div class="stat-value">¥{{ Math.min(...predictionData.predictions).toFixed(2) }}</div>
+            </div>
+
+            <div class="stat-item">
+              <div class="stat-label">总预测销售额</div>
+              <div class="stat-value">¥{{ calculateSum(predictionData.predictions).toFixed(2) }}</div>
+            </div>
+
+            <div class="stat-item">
+              <div class="stat-label">预测趋势</div>
+              <div class="stat-value" :class="calculateTrend(predictionData.predictions) >= 0 ? 'positive' : 'negative'">
+                <i :class="calculateTrend(predictionData.predictions) >= 0 ? 'icon-trending-up' : 'icon-trending-down'"></i>
+                {{ calculateTrend(predictionData.predictions) >= 0 ? '上升' : '下降' }}
+                {{ Math.abs(calculateTrend(predictionData.predictions)).toFixed(2) }}%
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 相关产品卡片 -->
+    <div v-if="showResults && selectedView === 'all' && !loading && !error && products.length > 0" class="card related-card">
+      <div class="card-header">
+        <div class="card-title">
+          <i class="icon-products"></i>相关产品销售情况
+        </div>
+        <p class="card-subtitle">点击查看单个产品的详细预测分析</p>
+      </div>
+
+      <div class="product-grid">
+        <div v-for="product in products.slice(0, 4)" :key="product.productId" class="product-item">
+          <h4 class="product-name">{{ product.productName || `产品 #${product.productId}` }}</h4>
+          <p class="product-description">
+            {{ product.description ? (product.description.length > 50 ? product.description.substring(0, 50) + '...' : product.description) : '暂无描述' }}
+          </p>
+          <div class="product-price">¥{{ product.price || '0.00' }}</div>
+          <button @click="viewProductPrediction(product.productId)" class="btn btn-sm btn-outline">
+            <i class="icon-chart"></i> 查看详细预测
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 历史订单数据 -->
+    <div v-if="showResults && selectedProductId && selectedView === 'product' && !loading && !error && productOrders.length > 0" class="card orders-card">
+      <div class="card-header">
+        <div class="card-title">
+          <i class="icon-history"></i>历史订单数据
+        </div>
+        <p class="card-subtitle">近期订单记录分析</p>
+      </div>
+
+      <div class="order-list">
+        <table class="table">
+          <thead>
+          <tr>
+            <th>订单号</th>
+            <th>订单日期</th>
+            <th>数量</th>
+            <th>订单金额</th>
+            <th>状态</th>
+          </tr>
+          </thead>
+          <tbody>
+          <tr v-for="order in productOrders.slice(0, 5)" :key="order.orderId">
+            <td>{{ order.orderNumber || '未知' }}</td>
+            <td>{{ formatDate(order.createdAt) }}</td>
+            <td>{{ getOrderQuantity(order) }}</td>
+            <td>¥{{ order.totalAmount || '0.00' }}</td>
+            <td><span :class="getStatusClass(order)">{{ getStatusText(order) }}</span></td>
+          </tr>
+          </tbody>
+        </table>
+        <div v-if="productOrders.length > 5" class="view-more">
+          <router-link :to="'/orders?productId=' + selectedProductId" class="btn btn-sm btn-outline">
+            <i class="icon-more"></i> 查看更多订单
+          </router-link>
+        </div>
+      </div>
+    </div>
+
+    <div v-if="showResults && selectedProductId && selectedView === 'product' && !loading && !error && productOrders.length === 0" class="card orders-card">
+      <div class="card-header">
+        <div class="card-title">
+          <i class="icon-history"></i>历史订单数据
+        </div>
+      </div>
+      <div class="no-data">
+        <i class="icon-info"></i> 暂无该产品的历史订单数据
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+import { ref, reactive, computed } from 'vue';
+import axios from 'axios';
+import { Chart, registerables } from 'chart.js';
+import { Line } from 'vue-chartjs';
+
+// Register Chart.js components
+Chart.register(...registerables);
+
+export default {
+  name: 'SalesPredictionView',
+  components: {
+    Line
+  },
+  setup() {
+    // 表单参数
+    const merchantId = ref(null);
+    const selectedProductId = ref(null);
+    const daysToPredict = ref(30);
+    const selectedView = ref('all');
+
+    // 状态控制
+    const loading = ref(false);
+    const loadingProducts = ref(false);
+    const error = ref(null);
+    const formError = ref(null);
+    const showResults = ref(false);
+
+    // 数据
+    const products = ref([]);
+    const productOrders = ref([]);
+    const predictionData = reactive({
+      dates: [],
+      predictions: []
+    });
+
+    // 计算属性
+    const isFormValid = computed(() => {
+      if (!merchantId.value) return false;
+      if (selectedView.value === 'product' && !selectedProductId.value) return false;
+      return true;
+    });
+
+    const selectedProductName = computed(() => {
+      if (!selectedProductId.value) return '';
+      const product = products.value.find(p => p.productId === selectedProductId.value);
+      return product ? product.productName : '';
+    });
+
+    // 图表数据
+    const chartData = computed(() => {
+      return {
+        labels: predictionData.dates,
+        datasets: [{
+          label: selectedView.value === 'all' ? '所有产品销售预测' :
+              (selectedProductName.value ? `${selectedProductName.value} 销售预测` : `产品 #${selectedProductId.value} 销售预测`),
+          backgroundColor: 'rgba(53, 162, 235, 0.2)',
+          borderColor: 'rgba(53, 162, 235, 1)',
+          pointBackgroundColor: 'rgba(53, 162, 235, 1)',
+          pointBorderColor: '#fff',
+          pointHoverBackgroundColor: '#fff',
+          pointHoverBorderColor: 'rgba(53, 162, 235, 1)',
+          borderWidth: 2,
+          tension: 0.3,
+          data: predictionData.predictions
+        }]
+      };
+    });
+
+    // 图表选项
+    const chartOptions = {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        y: {
+          beginAtZero: false,
+          title: {
+            display: true,
+            text: '销售金额 (¥)',
+            font: {
+              size: 14,
+              weight: 'bold'
+            }
+          },
+          grid: {
+            color: 'rgba(0, 0, 0, 0.05)'
+          }
+        },
+        x: {
+          title: {
+            display: true,
+            text: '日期',
+            font: {
+              size: 14,
+              weight: 'bold'
+            }
+          },
+          grid: {
+            color: 'rgba(0, 0, 0, 0.05)'
+          }
+        }
+      },
+      plugins: {
+        tooltip: {
+          backgroundColor: 'rgba(0, 0, 0, 0.7)',
+          titleFont: {
+            size: 14
+          },
+          bodyFont: {
+            size: 13
+          },
+          callbacks: {
+            label: function(context) {
+              return `销售额: ¥${context.raw.toFixed(2)}`;
+            }
+          }
+        },
+        legend: {
+          position: 'top',
+          labels: {
+            font: {
+              size: 14
+            }
+          }
+        }
+      }
+    };
+
+    // 获取所有产品销售预测
+    const fetchAllProductsPredictions = async () => {
+      loading.value = true;
+      error.value = null;
+
+      try {
+        console.log("发送预测请求:", `http://localhost:8080/api/ai/sales-prediction/${merchantId.value}`);
+        const response = await axios.get(`http://localhost:8080/api/ai/sales-prediction/${merchantId.value}`);
+        console.log("获取预测数据响应:", response);
+
+        // 更新预测数据
+        predictionData.dates = response.data.dates;
+        predictionData.predictions = response.data.predictions;
+
+        // 标记显示结果
+        showResults.value = true;
+      } catch (err) {
+        console.error('获取预测数据失败:', err);
+        error.value = err.response?.data?.message || '无法获取预测数据，请检查商家ID是否正确';
+      } finally {
+        loading.value = false;
+      }
+    };
+
+    // 获取单个产品销售预测
+    const fetchProductPredictions = async () => {
+      if (!selectedProductId.value) {
+        error.value = '请选择要预测的产品';
+        return;
+      }
+
+      loading.value = true;
+      error.value = null;
+
+      try {
+        console.log("发送产品预测请求:", `http://localhost:8080/api/ai/sales-prediction-by-product/${merchantId.value}/${selectedProductId.value}/${daysToPredict.value}`);
+        const response = await axios.get(
+            `http://localhost:8080/api/ai/sales-prediction-by-product/${merchantId.value}/${selectedProductId.value}/${daysToPredict.value}`
+        );
+        console.log("获取产品预测响应:", response);
+
+        // 更新预测数据
+        predictionData.dates = response.data.dates;
+        predictionData.predictions = response.data.predictions;
+
+        // 获取产品的历史订单
+        await fetchProductOrders();
+
+        // 标记显示结果
+        showResults.value = true;
+      } catch (err) {
+        console.error('获取产品预测数据失败:', err);
+        error.value = err.response?.data?.message || '无法获取产品预测数据';
+      } finally {
+        loading.value = false;
+      }
+    };
+
+    // 获取产品列表
+    const fetchProducts = async () => {
+      console.log("开始获取产品列表，商家ID:", merchantId.value);
+
+      if (!merchantId.value) {
+        formError.value = '请先输入商家ID';
+        return;
+      }
+
+      loadingProducts.value = true;
+      formError.value = null;
+
+      try {
+        // 确保请求包含正确的headers
+        console.log("发送请求到:", `http://localhost:8080/api/products`);
+        const response = await axios.get(`http://localhost:8080/api/products`, {
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          }
+        });
+
+        console.log("获取产品列表响应:", response);
+
+        // 确保response.data存在且是数组
+        if (!response.data || !Array.isArray(response.data)) {
+          console.error("返回的数据不是数组:", response.data);
+          throw new Error('返回的数据格式不正确');
+        }
+
+        console.log("获取到产品数量:", response.data.length);
+
+        // 过滤商家相关的产品 - 确保类型转换正确
+        const mId = parseInt(merchantId.value, 10);
+        const merchantProducts = response.data.filter(product => {
+          console.log("比较产品:", product.productId, "商家ID:", product.merchantId, "当前选择的商家ID:", mId);
+          // 确保进行数字比较而不是字符串比较
+          return parseInt(product.merchantId, 10) === mId;
+        });
+
+        console.log("过滤后的商家产品:", merchantProducts);
+
+        // 如果没有找到当前商家的产品，显示所有产品
+        if (merchantProducts.length === 0) {
+          products.value = response.data;
+          formError.value = '未找到该商家的产品，已显示所有产品';
+        } else {
+          products.value = merchantProducts;
+        }
+
+        // 如果只有一个产品，自动选择它
+        if (merchantProducts.length === 1) {
+          selectProduct(merchantProducts[0].productId);
+        } else {
+          // 清除当前选择，让用户重新选择
+          selectedProductId.value = null;
+        }
+      } catch (err) {
+        console.error('获取产品列表失败:', err);
+        // 提供更详细的错误信息
+        formError.value = `无法获取产品列表: ${err.message || '请检查网络连接和服务器状态'}`;
+      } finally {
+        loadingProducts.value = false;
+      }
+    };
+
+    // 选择产品方法
+    const selectProduct = (productId) => {
+      console.log("选择产品:", productId);
+      selectedProductId.value = productId;
+
+      // 找到选中的产品并显示提示
+      const selectedProduct = products.value.find(p => p.productId === productId);
+      if (selectedProduct) {
+        formError.value = null; // 清除之前的错误
+        console.log("已选择产品:", selectedProduct.productName || `产品 #${productId}`);
+      }
+    };
+
+    // 获取产品的历史订单
+    const fetchProductOrders = async () => {
+      try {
+        console.log("获取订单列表:", `http://localhost:8080/api/orders/${merchantId.value}`);
+        const response = await axios.get(`http://localhost:8080/api/orders/${merchantId.value}`);
+        console.log("获取订单响应:", response);
+
+        // 过滤与所选产品相关的订单
+        productOrders.value = response.data.filter(order => {
+          return order.merchantId === merchantId.value;
+          // 如果订单中包含产品信息，则可以进一步过滤
+          // return order.merchantId === merchantId.value && order.productId === selectedProductId.value;
+        });
+      } catch (err) {
+        console.error('获取产品订单失败:', err);
+        productOrders.value = [];
+      }
+    };
+
+    // 开始预测
+    const startPrediction = () => {
+      formError.value = null;
+
+      if (!merchantId.value) {
+        formError.value = '请输入商家ID';
+        return;
+      }
+
+      if (selectedView.value === 'product' && !selectedProductId.value) {
+        formError.value = '请选择要预测的产品';
+        return;
+      }
+
+      if (selectedView.value === 'all') {
+        fetchAllProductsPredictions();
+      } else {
+        fetchProductPredictions();
+      }
+    };
+
+    // 查看特定产品的预测
+    const viewProductPrediction = (productId) => {
+      selectedProductId.value = productId;
+      selectedView.value = 'product';
+      fetchProductPredictions();
+    };
+
+    // 计算统计指标
+    const calculateAverage = (data) => {
+      if (!data || data.length === 0) return 0;
+      return data.reduce((sum, val) => sum + val, 0) / data.length;
+    };
+
+    const calculateSum = (data) => {
+      if (!data || data.length === 0) return 0;
+      return data.reduce((sum, val) => sum + val, 0);
+    };
+
+    const calculateTrend = (data) => {
+      if (!data || data.length < 2) return 0;
+      const firstValue = data[0];
+      const lastValue = data[data.length - 1];
+      return ((lastValue - firstValue) / firstValue) * 100;
+    };
+
+    // 格式化日期
+    const formatDate = (dateString) => {
+      if (!dateString) return '未知日期';
+      try {
+        const date = new Date(dateString);
+        return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+      } catch (e) {
+        return '日期格式错误';
+      }
+    };
+
+    // 获取订单中的产品数量
+    const getOrderQuantity = (order) => {
+      return order.quantity || 1;
+    };
+
+    // 获取订单状态文本
+    const getStatusText = (order) => {
+      if (!order || !order.status) return '未知状态';
+
+      const statusMap = {
+        'PENDING': '待处理',
+        'PROCESSING': '处理中',
+        'SHIPPED': '已发货',
+        'DELIVERED': '已送达',
+        'COMPLETED': '已完成',
+        'CANCELLED': '已取消'
+      };
+
+      return statusMap[order.status] || order.status;
+    };
+
+    // 获取订单状态CSS类
+    const getStatusClass = (order) => {
+      if (!order || !order.status) return '';
+
+      const statusClassMap = {
+        'PENDING': 'status-pending',
+        'PROCESSING': 'status-processing',
+        'SHIPPED': 'status-shipped',
+        'DELIVERED': 'status-delivered',
+        'COMPLETED': 'status-completed',
+        'CANCELLED': 'status-cancelled'
+      };
+
+      return statusClassMap[order.status] || '';
+    };
+
+    return {
+      // 表单参数
+      merchantId,
+      selectedProductId,
+      daysToPredict,
+      selectedView,
+
+      // 状态控制
+      loading,
+      loadingProducts,
+      error,
+      formError,
+      showResults,
+
+      // 数据
+      products,
+      productOrders,
+      predictionData,
+
+      // 计算属性
+      isFormValid,
+      selectedProductName,
+      chartData,
+      chartOptions,
+
+      // 方法
+      fetchProducts,
+      startPrediction,
+      viewProductPrediction,
+      calculateAverage,
+      calculateSum,
+      calculateTrend,
+      formatDate,
+      getOrderQuantity,
+      getStatusText,
+      getStatusClass,
+      selectProduct
+    };
+  }
+};
+</script>
+
+<style scoped>
+/* 基础样式 */
+.sales-prediction-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  color: #333;
+}
+
+.page-title {
+  margin-bottom: 24px;
+  font-size: 28px;
+  font-weight: 600;
+  color: #2c3e50;
+  text-align: center;
+  position: relative;
+}
+
+.page-title::after {
+  content: '';
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80px;
+  height: 3px;
+  background: linear-gradient(90deg, #3498db, #2980b9);
+  border-radius: 3px;
+}
+
+/* 卡片样式 */
+.card {
+  background-color: white;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  padding: 24px;
+  margin-bottom: 30px;
+  transition: all 0.3s ease;
+}
+
+.card:hover {
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+  transform: translateY(-2px);
+}
+
+.card-header {
+  margin-bottom: 20px;
+}
+
+.card-title {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #2c3e50;
+  display: flex;
+  align-items: center;
+}
+
+.card-title i {
+  margin-right: 8px;
+  color: #3498db;
+}
+
+.card-subtitle {
+  font-size: 14px;
+  color: #7f8c8d;
+  margin-bottom: 16px;
+}
+
+/* 表单样式 */
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.form-group {
+  flex: 1;
+  min-width: 220px;
+}
+
+label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  color: #34495e;
+}
+
+.required {
+  color: #e74c3c;
+  margin-left: 4px;
+}
+
+.form-control {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 14px;
+  transition: all 0.3s;
+}
+
+.form-control:focus {
+  border-color: #3498db;
+  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+  outline: none;
+}
+
+.form-control::placeholder {
+  color: #bdc3c7;
+}
+
+.info-text {
+  font-size: 13px;
+  color: #7f8c8d;
+  margin-top: 5px;
+  font-style: italic;
+}
+
+.form-error {
+  background-color: #fdedec;
+  color: #e74c3c;
+  padding: 12px;
+  border-radius: 6px;
+  margin-top: 16px;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+}
+
+.form-error i {
+  margin-right: 8px;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 16px;
+  margin-top: 24px;
+}
+
+.action-predict {
+  margin-top: 30px;
+}
+
+.btn {
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn i {
+  margin-right: 8px;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.btn-primary {
+  background-color: #3498db;
+  color: white;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background-color: #2980b9;
+}
+
+.btn-outline {
+  background-color: transparent;
+  border: 1px solid #3498db;
+  color: #3498db;
+}
+
+.btn-outline:hover:not(:disabled) {
+  background-color: #f0f8ff;
+}
+
+.btn-sm {
+  padding: 6px 12px;
+  font-size: 13px;
+}
+
+/* 加载状态 */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+}
+
+.spinner {
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #3498db;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  animation: spin 1s linear infinite;
+  margin-bottom: 16px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* 错误状态 */
+.error-container {
+  min-height: 200px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  padding: 32px;
+}
+
+.alert {
+  width: 100%;
+  padding: 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.alert-danger {
+  background-color: #fdedec;
+  color: #e74c3c;
+  border-left: 4px solid #e74c3c;
+}
+
+/* 图表区域 */
+.chart-container {
+  height: 400px;
+  margin-bottom: 30px;
+  border-radius: 8px;
+  padding: 16px;
+  background-color: #f8f9fa;
+}
+
+/* 统计摘要 */
+.stats-container {
+  background-color: #f8fafc;
+  border-radius: 10px;
+  padding: 20px;
+}
+
+.stats-title {
+  margin-top: 0;
+  margin-bottom: 20px;
+  font-size: 18px;
+  color: #2c3e50;
+  display: flex;
+  align-items: center;
+}
+
+.stats-title i {
+  margin-right: 8px;
+  color: #3498db;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 20px;
+}
+
+.stat-item {
+  padding: 16px;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s;
+}
+
+.stat-item:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.stat-label {
+  font-size: 14px;
+  color: #7f8c8d;
+  margin-bottom: 8px;
+}
+
+.stat-value {
+  font-size: 18px;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.stat-value.positive {
+  color: #27ae60;
+  display: flex;
+  align-items: center;
+}
+
+.stat-value.negative {
+  color: #e74c3c;
+  display: flex;
+  align-items: center;
+}
+
+.stat-value i {
+  margin-right: 6px;
+}
+
+/* 产品选择样式 */
+.product-selection-container {
+  margin-top: 20px;
+}
+
+.section-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  color: #2c3e50;
+  display: flex;
+  align-items: center;
+}
+
+.product-selection {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px;
+}
+
+.product-selection-item {
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  height: 180px;
+}
+
+.product-selection-item:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
+  border-color: #cbd5e0;
+}
+
+.product-selection-item.selected {
+  border-color: #3498db;
+  background-color: rgba(52, 152, 219, 0.05);
+  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.3);
+}
+
+.product-selection-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 8px;
+}
+
+.product-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.product-selection-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: auto;
+  padding-top: 8px;
+  border-top: 1px solid #edf2f7;
+}
+
+.product-id {
+  font-size: 13px;
+  color: #a0aec0;
+}
+
+.selection-indicator {
+  font-size: 13px;
+  color: #718096;
+}
+
+.selection-indicator .icon-check {
+  color: #3498db;
+  font-weight: bold;
+}
+
+/* 产品网格 */
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 24px;
+}
+
+.product-item {
+  padding: 20px;
+  background-color: #f8fafc;
+  border-radius: 10px;
+  transition: all 0.3s;
+  border: 1px solid #ecf0f1;
+  position: relative;
+  overflow: hidden;
+}
+
+.product-item:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+  border-color: #d0d7de;
+}
+
+.product-name {
+  margin-top: 0;
+  margin-bottom: 12px;
+  color: #2c3e50;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.product-description {
+  color: #7f8c8d;
+  margin-bottom: 16px;
+  line-height: 1.5;
+  font-size: 14px;
+  height: 42px;
+  overflow: hidden;
+}
+
+.product-price {
+  font-weight: 700;
+  color: #2c3e50;
+  margin-bottom: 16px;
+  font-size: 18px;
+}
+
+/* 订单列表 */
+.order-list {
+  overflow-x: auto;
+  margin-top: 10px;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table th, .table td {
+  padding: 12px 16px;
+  text-align: left;
+  border-bottom: 1px solid #ecf0f1;
+}
+
+.table th {
+  background-color: #f8fafc;
+  font-weight: 600;
+  color: #2c3e50;
+  font-size: 14px;
+}
+
+.table td {
+  font-size: 14px;
+}
+
+.table tr:hover {
+  background-color: #f8fafc;
+}
+
+.status-pending {
+  color: #f39c12;
+  padding: 4px 8px;
+  border-radius: 4px;
+  background-color: rgba(243, 156, 18, 0.1);
+  font-weight: 600;
+  display: inline-block;
+}
+
+.status-processing {
+  color: #3498db;
+  padding: 4px 8px;
+  border-radius: 4px;
+  background-color: rgba(52, 152, 219, 0.1);
+  font-weight: 600;
+  display: inline-block;
+}
+
+.status-shipped {
+  color: #9b59b6;
+  padding: 4px 8px;
+  border-radius: 4px;
+  background-color: rgba(155, 89, 182, 0.1);
+  font-weight: 600;
+  display: inline-block;
+}
+
+.status-delivered {
+  color: #2ecc71;
+  padding: 4px 8px;
+  border-radius: 4px;
+  background-color: rgba(46, 204, 113, 0.1);
+  font-weight: 600;
+  display: inline-block;
+}
+
+.status-completed {
+  color: #27ae60;
+  padding: 4px 8px;
+  border-radius: 4px;
+  background-color: rgba(39, 174, 96, 0.1);
+  font-weight: 600;
+  display: inline-block;
+}
+
+.status-cancelled {
+  color: #e74c3c;
+  padding: 4px 8px;
+  border-radius: 4px;
+  background-color: rgba(231, 76, 60, 0.1);
+  font-weight: 600;
+  display: inline-block;
+}
+
+.no-data {
+  text-align: center;
+  padding: 40px;
+  color: #7f8c8d;
+  font-style: italic;
+  font-size: 15px;
+  background-color: #f8fafc;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.no-data i {
+  margin-right: 8px;
+  color: #3498db;
+}
+
+.view-more {
+  text-align: right;
+  margin-top: 16px;
+}
+
+/* 图标样式 */
+[class^="icon-"] {
+  font-family: "Font Awesome 5 Free", Arial, sans-serif;
+  font-weight: 900;
+  font-style: normal;
+}
+
+.icon-settings::before { content: "⚙️"; }
+.icon-chart::before { content: "📊"; }
+.icon-refresh::before { content: "🔄"; }
+.icon-error::before { content: "⚠️"; }
+.icon-info::before { content: "ℹ️"; }
+.icon-analytics::before { content: "📈"; }
+.icon-trending-up::before { content: "📈"; }
+.icon-trending-down::before { content: "📉"; }
+.icon-products::before { content: "📦"; }
+.icon-history::before { content: "🕒"; }
+.icon-more::before { content: "👉"; }
+.icon-check::before { content: "✓"; }
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .filters {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .form-group {
+    width: 100%;
+  }
+
+  .action-buttons {
+    flex-direction: column;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .product-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .product-selection {
+    grid-template-columns: 1fr;
+  }
+}
+</style>

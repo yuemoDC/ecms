@@ -84,4 +84,8 @@ public class MerchantApplicationService {
         }
         return null;
     }
+
+    public List<MerchantApplication> getApplicationsByUserId(Integer userId) {
+        return repository.findByUserId(userId);  // 使用 JPA 自定义查询
+    }
 }

@@ -1,0 +1,79 @@
+@startuml MerchantRegistration_Corrected
+
+title 商家入驻申请流程（泳道+对象流）
+skinparam swimlane {
+  backgroundColor #F5F5F5
+  borderColor #333
+  participantFontSize 14
+}
+skinparam activity {
+  BackgroundColor #FFF
+  BorderColor #2F4F4F
+  FontSize 12
+}
+
+|商家|
+start
+:填写企业信息;
+:上传资质文件;
+note right: 生成**营业执照扫描件**数据
+:提交银行账户;
+note right: 生成**银行账户信息**数据
+:勾选服务协议;
+:点击"提交申请";
+
+|系统|
+if (资料完整?) then (是)
+  fork
+    :OCR识别营业执照;
+    :验证社会信用代码;
+  fork again
+    :对接银行验证账户;
+  end fork
+  :生成初审报告;
+else (否)
+  #LightCoral:发送"资料缺失"通知;
+  -> 商家;
+  stop
+endif
+
+|管理员|
+:分配审核任务;
+if (资料合规?) then (是)
+  :审批通过;
+else (否)
+  #LightCoral:填写驳回原因;
+  -> 商家;
+  repeat
+    |商家|
+    :修改补充资料;
+    |管理员|
+    :再次审核;
+  repeat while (审核不通过且次数<3?)
+  ->超过限制;
+  |系统|
+  #LightCoral:永久拒绝申请;
+  stop
+endif
+
+|系统|
+:创建商家账号;
+note left: 生成**商家账号**数据
+:配置权限模板;
+:发送激活邮件;
+-> 商家;
+:商家激活账号;
+:开通店铺功能;
+stop
+
+' === 对象流可视化改进 ===
+legend right
+  <b>数据对象说明</b>：
+  | 对象 | 产生步骤 |
+  |------|----------|
+  | 营业执照扫描件 | 上传资质文件 |
+  | 银行账户信息 | 提交银行信息 |
+  | 商家账号 | 创建商家账号 |
+end legend
+
+@enduml

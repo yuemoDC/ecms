@@ -89,7 +89,17 @@ const routes = [
 
 const router = createRouter({
     history: createWebHistory(),
-    routes
+    routes,
+    scrollBehavior(to, from, savedPosition) {
+        return new Promise((resolve) => {
+            setTimeout(() => {
+                resolve({
+                    ...savedPosition,
+                    behavior: 'smooth' // 添加平滑滚动
+                });
+            }, 1200); // 延长等待时间
+        });
+    }
 });
 
 router.beforeEach((to, from, next) => {
@@ -99,7 +109,7 @@ router.beforeEach((to, from, next) => {
     if (requiresAuth && !token) {
         next('/login');
     } else if ((to.path === '/login' || to.path === '/register') && token) {
-        next('/home');
+        next('/SplashScreen');
     } else {
         next();
     }

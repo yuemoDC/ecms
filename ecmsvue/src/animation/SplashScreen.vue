@@ -72,13 +72,13 @@ export default {
       tl.to(logo.value, {
         opacity: 1,
         y: 0,
-        duration: 0.8,
+        duration: 0.5,
         ease: 'power2.out'
       })
           .to([circle1.value, circle2.value, circle3.value], {
             scale: 1,
             opacity: 0.7,
-            duration: 0.7,
+            duration: 0.5,
             stagger: 0.15,
             ease: 'back.out(1.7)'
           }, '-=0.5')
@@ -87,20 +87,20 @@ export default {
           .to(title.value, {
             opacity: 1,
             y: 0,
-            duration: 0.7,
+            duration: 0.3,
             ease: 'power2.out'
           }, '-=0.3')
           .to(subtitle.value, {
             opacity: 1,
             y: 0,
-            duration: 0.7,
+            duration: 0.3,
             ease: 'power2.out'
           }, '-=0.5')
 
           // 第三阶段：进度条填充
           .to(progressBar.value, {
             width: '100%',
-            duration: 2,
+            duration: 1,
             ease: 'power1.inOut'
           }, '-=0.2')
 
@@ -108,13 +108,13 @@ export default {
           .to([logo.value, title.value, subtitle.value, decoration.value, progressContainer.value], {
             opacity: 0,
             y: -20,
-            duration: 0.8,
+            duration: 0.3,
             stagger: 0.1,
             ease: 'power2.in'
           }, '+=0.3')
           .to(splashScreen.value, {
             opacity: 0,
-            duration: 0.5,
+            duration: 0.2,
             onComplete: () => {
               splashScreen.value.style.display = 'none';
             }

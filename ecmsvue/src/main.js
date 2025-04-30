@@ -3,8 +3,7 @@ import App from './App.vue';
 import router from './router';
 import ElementPlus from 'element-plus';
 import 'element-plus/dist/index.css'; // 引入 Element Plus CSS
-import gsap from 'gsap';
-import Vue from 'vue';
+
 
 const app = createApp(App);
 app.use(router);
@@ -18,5 +17,3 @@ window.addEventListener('error', event => {
         event.preventDefault();
     }
 });
-
-Vue.prototype.$gsap = gsap;

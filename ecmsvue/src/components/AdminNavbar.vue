@@ -1,5 +1,5 @@
 <template>
-  <el-header>
+  <el-header class="navbar-component">
     <div class="navbar"> <!-- 导航栏容器 -->
       <el-menu :default-active="activeIndex" class="menu" @select="handleSelect" mode="horizontal">
         <!-- 设置默认选中的菜单项 -->
@@ -61,12 +61,18 @@ export default {
     },
     handleSelect(index) {
       if (index === 'logout') return;
-      this.activeIndex = index;
-      localStorage.setItem('activeIndex', index);
-      this.$router.push({
-        name: index,
-        meta: { transition: 'slide' } // 添加过渡标记
-      });
+
+      // 修正路由名称映射
+      const routeMap = {
+        'home': '/home',
+        'merchant-applications': '/merchant-applications',
+        'data-visualization': '/data-visualization',
+        'data-SalesPrediction': '/data-SalesPrediction',
+        'bulkPrediction': '/bulkPrediction'
+      };
+
+      // 触发自定义事件
+      this.$emit('navigate', routeMap[index] || '/home');
     },
     handleLogout() {
       // 处理用户登出
@@ -85,3 +91,9 @@ export default {
   }
 };
 </script>
+
+<style scoped>
+.navbar-component{
+  will-change: transform, opacity;
+}
+</style>

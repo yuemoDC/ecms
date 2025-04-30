@@ -186,7 +186,22 @@
         </button>
       </div>
 
-      <div v-else-if="predictionData.dates.length > 0" class="prediction-content">
+      <!-- 处理无产品或其他错误信息的情况 -->
+      <div v-else-if="noDataMessage" class="no-data-container">
+        <div class="alert alert-warning">
+          <i class="icon-info"></i> {{ noDataMessage }}
+        </div>
+        <div class="no-data-actions">
+          <button v-if="selectedView === 'product'" @click="fetchProducts" class="btn btn-outline">
+            <i class="icon-refresh"></i> 获取产品列表
+          </button>
+          <button v-else @click="fetchAllProductsPredictions" class="btn btn-primary">
+            <i class="icon-refresh"></i> 重新尝试
+          </button>
+        </div>
+      </div>
+
+      <div v-else-if="predictionData.dates && predictionData.dates.length > 0" class="prediction-content">
         <!-- 图表区域 -->
         <div class="chart-container">
           <Line :data="chartData" :options="chartOptions" />
@@ -237,7 +252,7 @@
     </div>
 
     <!-- 相关产品卡片 -->
-    <div v-if="showResults && selectedView === 'all' && !loading && !error && products.length > 0" class="card related-card">
+    <div v-if="showResults && selectedView === 'all' && !loading && !error && !noDataMessage && products.length > 0" class="card related-card">
       <div class="card-header">
         <div class="card-title">
           <i class="icon-products"></i>相关产品销售情况
@@ -260,7 +275,7 @@
     </div>
 
     <!-- 历史订单数据 -->
-    <div v-if="showResults && selectedProductId && selectedView === 'product' && !loading && !error && productOrders.length > 0" class="card orders-card">
+    <div v-if="showResults && selectedProductId && selectedView === 'product' && !loading && !error && !noDataMessage && productOrders.length > 0" class="card orders-card">
       <div class="card-header">
         <div class="card-title">
           <i class="icon-history"></i>历史订单数据
@@ -297,7 +312,7 @@
       </div>
     </div>
 
-    <div v-if="showResults && selectedProductId && selectedView === 'product' && !loading && !error && productOrders.length === 0" class="card orders-card">
+    <div v-if="showResults && selectedProductId && selectedView === 'product' && !loading && !error && !noDataMessage && productOrders.length === 0" class="card orders-card">
       <div class="card-header">
         <div class="card-title">
           <i class="icon-history"></i>历史订单数据
@@ -348,6 +363,7 @@ export default {
     const error = ref(null);
     const formError = ref(null);
     const showResults = ref(false);
+    const noDataMessage = ref(null); // 新增：用于显示无数据或无产品的情况
 
     // 数据
     const products = ref([]);
@@ -373,7 +389,7 @@ export default {
     // 图表数据
     const chartData = computed(() => {
       return {
-        labels: predictionData.dates,
+        labels: predictionData.dates || [],
         datasets: [{
           label: selectedView.value === 'all' ? '所有产品销售预测' :
               (selectedProductName.value ? `${selectedProductName.value} 销售预测` : `产品 #${selectedProductId.value} 销售预测`),
@@ -385,7 +401,7 @@ export default {
           pointHoverBorderColor: 'rgba(53, 162, 235, 1)',
           borderWidth: 2,
           tension: 0.3,
-          data: predictionData.predictions
+          data: predictionData.predictions || []
         }]
       };
     });
@@ -498,6 +514,9 @@ export default {
         selectedProductId.value = null;
         products.value = [];
         showResults.value = false;
+        // 清除之前的错误和无数据消息
+        error.value = null;
+        noDataMessage.value = null;
       }
     };
 
@@ -510,15 +529,30 @@ export default {
     const fetchAllProductsPredictions = async () => {
       loading.value = true;
       error.value = null;
+      noDataMessage.value = null; // 清除之前的无数据消息
 
       try {
         console.log("发送预测请求:", `http://localhost:8080/api/ai/sales-prediction/${merchantId.value}`);
         const response = await axios.get(`http://localhost:8080/api/ai/sales-prediction/${merchantId.value}`);
         console.log("获取预测数据响应:", response);
 
-        // 更新预测数据
-        predictionData.dates = response.data.dates;
-        predictionData.predictions = response.data.predictions;
+        // 检查是否返回了错误消息
+        if (response.data.message) {
+          noDataMessage.value = response.data.message;
+          // 如果没有产品，尝试获取产品列表以确认
+          if (response.data.message.includes('未找到此商家的产品')) {
+            await fetchProducts();
+          }
+          predictionData.dates = [];
+          predictionData.predictions = [];
+        } else if (response.data.dates && response.data.predictions) {
+          // 正常更新预测数据
+          predictionData.dates = response.data.dates;
+          predictionData.predictions = response.data.predictions;
+        } else {
+          // 数据格式不符合预期
+          throw new Error('返回的数据格式不正确');
+        }
 
         // 标记显示结果
         showResults.value = true;
@@ -539,6 +573,7 @@ export default {
 
       loading.value = true;
       error.value = null;
+      noDataMessage.value = null; // 清除之前的无数据消息
 
       try {
         console.log("发送产品预测请求:", `http://localhost:8080/api/ai/sales-prediction-by-product/${merchantId.value}/${selectedProductId.value}/${daysToPredict.value}`);
@@ -547,9 +582,16 @@ export default {
         );
         console.log("获取产品预测响应:", response);
 
-        // 更新预测数据
-        predictionData.dates = response.data.dates;
-        predictionData.predictions = response.data.predictions;
+        // 检查是否返回了错误消息
+        if (response.data.message) {
+          noDataMessage.value = response.data.message;
+          predictionData.dates = [];
+          predictionData.predictions = [];
+        } else {
+          // 更新预测数据
+          predictionData.dates = response.data.dates || [];
+          predictionData.predictions = response.data.predictions || [];
+        }
 
         // 获取产品的历史订单
         await fetchProductOrders();
@@ -602,12 +644,14 @@ export default {
         // 如果没有产品，显示提示信息
         if (products.value.length === 0) {
           formError.value = '未找到该商家的产品';
+          if (selectedView.value === 'product') {
+            noDataMessage.value = '该商家没有产品可供分析';
+          }
         }
         // 如果只有一个产品，自动选择它
         else if (products.value.length === 1) {
           selectProduct(products.value[0].productId);
-        }
-        else {
+        } else {
           // 有多个产品时，清除当前选择，让用户重新选择
           selectedProductId.value = null;
         }
@@ -625,6 +669,9 @@ export default {
     const selectProduct = (productId) => {
       console.log("选择产品:", productId);
       selectedProductId.value = productId;
+
+      // 清除之前的无数据消息
+      noDataMessage.value = null;
 
       // 找到选中的产品并显示提示
       const selectedProduct = products.value.find(p => p.productId === productId);
@@ -656,6 +703,8 @@ export default {
     // 开始预测
     const startPrediction = () => {
       formError.value = null;
+      error.value = null;
+      noDataMessage.value = null; // 清除之前的无数据消息
 
       if (!merchantId.value) {
         formError.value = '请选择商家';
@@ -771,6 +820,7 @@ export default {
       error,
       formError,
       showResults,
+      noDataMessage, // 添加新的状态变量
 
       // 数据
       products,

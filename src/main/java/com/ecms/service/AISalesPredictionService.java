@@ -99,11 +99,11 @@ public class AISalesPredictionService {
 
     private List<String> generateFutureDates(int daysToPredict) {
         List<String> dates = new ArrayList<>();
-        LocalDate currentDate = LocalDate.now();
+        LocalDateTime currentDate = LocalDateTime.now();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
         for (int i = 1; i <= daysToPredict; i++) {
-            LocalDate futureDate = currentDate.plusDays(i);
+            LocalDateTime futureDate = currentDate.plusDays(i);
             dates.add(futureDate.format(formatter));
         }
 
@@ -127,7 +127,7 @@ public class AISalesPredictionService {
             SalesPrediction prediction = new SalesPrediction();
             prediction.setMerchantId(merchantId);
             prediction.setProductId(firstProductId); // 使用真实存在的产品ID
-            prediction.setForecastDate(LocalDate.parse(dates.get(i)));
+            prediction.setForecastDate(LocalDateTime.parse(dates.get(i)));
             prediction.setPredictedSales(BigDecimal.valueOf(predictions.get(i)));
             prediction.setCreatedAt(LocalDateTime.now());
 

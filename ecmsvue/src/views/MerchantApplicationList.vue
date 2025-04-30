@@ -1,5 +1,6 @@
 <template>
-  <AppNavbar />
+  <AppNavbar @navigate="handleNavigation"/>
+  <div class="page-container">
   <el-container>
     <el-header>
       <h2>商家入驻申请管理</h2>
@@ -109,6 +110,7 @@
       </el-button>
     </el-main>
   </el-container>
+  </div>
 </template>
 
 <script>
@@ -116,12 +118,15 @@ import { ref, onMounted } from 'vue';
 import { ElMessage } from 'element-plus';
 import axios from 'axios';
 import AppNavbar from "@/components/AdminNavbar.vue";
-
+import {gsap} from "gsap"
 
 export default {
   name: 'MerchantApplicationList',
   components: {
     AppNavbar
+  },
+  async beforeUnmount() {
+    await this.leaveAnimation();
   },
   setup() {
     const applications = ref([]);
@@ -137,6 +142,26 @@ export default {
       userId: null,
       status: 'pending',
     });
+
+    onMounted(() => {
+      // 入场动画
+      gsap.fromTo(".page-container",
+          {
+            y: 100,
+            opacity: 0
+          },
+          {
+            y: 0,
+            opacity: 1,
+            duration: 1,
+            ease: "power4.out",
+            delay: 0.3
+          }
+      );
+
+      fetchApplications();
+
+    })
 
     const formatStatus = (status) => {
       const statusMap = {
@@ -280,6 +305,23 @@ export default {
       filterByStatus,
     };
   },
+  methods: {
+    async handleNavigation(path) {
+      await this.leaveAnimation();
+      this.$router.push(path);
+    },
+    leaveAnimation() {
+      return new Promise((resolve) => {
+        gsap.to(".page-container", {
+          duration: 0.8,
+          opacity: 0,
+          y: 100,
+          ease: "power4.in",
+          onComplete: resolve
+        });
+      });
+    }
+  }
 };
 </script>
 
@@ -287,5 +329,18 @@ export default {
 
 .toolbar {
   margin-bottom: 20px;
+}
+
+.page-container {
+  position: relative;
+  min-height: 100vh;
+  will-change: transform, opacity;
+}
+
+/* 优化动画性能 */
+.el-container {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
 }
 </style>

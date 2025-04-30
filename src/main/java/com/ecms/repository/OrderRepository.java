@@ -13,6 +13,12 @@ import java.util.List;
  */
 @Repository
 public interface OrderRepository extends JpaRepository<Order, Integer>, JpaSpecificationExecutor<Order> {
+    /**
+     * 按商家ID查找订单，并按创建时间排序
+     */
+    List<Order> findByMerchantIdOrderByCreatedAt(Integer merchantId);
+    List<Order> findByProductIdOrderByCreatedAtAsc(Integer productId);
+
 
     /**
      * 根据商家ID查找所有订单

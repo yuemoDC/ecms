@@ -68,11 +68,13 @@ export default {
         'merchant-applications': '/merchant-applications',
         'data-visualization': '/data-visualization',
         'data-SalesPrediction': '/data-SalesPrediction',
-        'bulkPrediction': '/bulkPrediction'
+        'bulkPrediction': '/bulkPrediction',
+        'AIhome': '/AIhome'
       };
 
       // 触发自定义事件
       this.$emit('navigate', routeMap[index] || '/home');
+
     },
     handleLogout() {
       // 处理用户登出
@@ -82,10 +84,7 @@ export default {
       this.$router.push('/login'); // 跳转到登录页面
     },
     handleSubmenuClick() {
-      this.$router.push({
-        path: '/AIhome',
-        meta: { transition: 'slide' }
-      });
+      this.$emit('navigate', '/AIhome'); // 改为通过navigate事件触发
     }
 
   }

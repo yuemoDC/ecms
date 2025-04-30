@@ -1,7 +1,8 @@
 <template>
   <div class="sales-prediction-container">
-    <AppNavbar /> <!-- 引入导航栏组件 -->
-    <VantaBackground />
+    <AppNavbar @navigate="handleNavigation"/> <!-- 引入导航栏组件 -->
+    <VantaBackground ref="vantaBg" class="vanta-container"/>
+    <div class="page-container">
     <h1 class="page-title">智能销售预测分析</h1>
 
     <!-- 预测参数设置卡片 -->
@@ -323,6 +324,7 @@
       </div>
     </div>
   </div>
+  </div>
 </template>
 
 <script>
@@ -332,6 +334,7 @@ import { Chart, registerables } from 'chart.js';
 import { Line } from 'vue-chartjs';
 import AppNavbar from "@/components/AdminNavbar.vue";
 import VantaBackground from "@/assets/VantaBackground.vue";
+import {gsap} from "gsap";
 
 // Register Chart.js components
 Chart.register(...registerables);
@@ -342,6 +345,25 @@ export default {
     VantaBackground,
     AppNavbar,
     Line
+  },
+  mounted() {
+    // 背景渐入动画
+    gsap.fromTo(this.$refs.vantaBg.$el,
+        {opacity: 0},
+        {
+          opacity: 1,
+          duration: 0.5,
+          ease: "power2.inOut",
+        }
+    );
+
+    gsap.fromTo(".page-container",{
+          opacity: 0},
+        {
+          opacity: 1,
+          duration: 0.5,
+          ease: "power2.inOut",
+        })
   },
   setup() {
     // 表单参数
@@ -846,6 +868,34 @@ export default {
       getStatusClass,
       selectProduct
     };
+  },
+  methods:{
+    async handleNavigation(path) {
+      // 添加页面跳转确认
+      if (this.$route.path === path) return;
+
+      await this.leaveAnimation();
+      this.$router.push(path);
+    },
+    leaveAnimation() {
+      return new Promise((resolve) => {
+        const tl = gsap.timeline();
+
+        // 同时执行内容容器和背景动画
+        tl.to(".page-container", {
+          duration: 0.5,
+          opacity: 0,
+          y: 0,
+          ease: "power4.in"
+        })
+            .to(this.$refs.vantaBg.$el, {
+              opacity: 0,
+              duration: 0.8,
+              ease: "power2.in"
+            }, 0) // 0表示同时开始动画
+            .eventCallback("onComplete", resolve);
+      });
+    }
   }
 };
 </script>

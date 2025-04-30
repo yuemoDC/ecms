@@ -1,7 +1,7 @@
 <template>
-  <AppNavbar />
-  <VantaBackground />
-  <div class="sales-prediction-container">
+  <AppNavbar @navigate="handleNavigation"/>
+  <VantaBackground ref="vantaBg" class="vanta-container"/>
+  <div class="sales-prediction-container page-container">
     <h1 class="page-title">批量商家销售预测对比</h1>
 
     <!-- 预测参数设置卡片 -->
@@ -195,6 +195,7 @@ import { Chart, registerables } from 'chart.js';
 import { Line } from 'vue-chartjs';
 import AppNavbar from "@/components/AdminNavbar.vue";
 import VantaBackground from "@/assets/VantaBackground.vue";
+import {gsap} from "gsap";
 
 // Register Chart.js components
 Chart.register(...registerables);
@@ -205,6 +206,25 @@ export default {
     VantaBackground,
     AppNavbar,
     Line
+  },
+  mounted() {
+    // 背景渐入动画
+    gsap.fromTo(this.$refs.vantaBg.$el,
+        {opacity: 0},
+        {
+          opacity: 1,
+          duration: 0.5,
+          ease: "power2.inOut",
+        }
+    );
+
+    gsap.fromTo(".page-container",{
+      opacity: 0},
+        {
+          opacity: 1,
+          duration: 0.5,
+          ease: "power2.inOut",
+    })
   },
   setup() {
     // 表单参数
@@ -495,6 +515,34 @@ export default {
       calculateTrend,
       getColorForMerchant
     };
+  },
+  methods:{
+    async handleNavigation(path) {
+      // 添加页面跳转确认
+      if (this.$route.path === path) return;
+
+      await this.leaveAnimation();
+      this.$router.push(path);
+    },
+    leaveAnimation() {
+      return new Promise((resolve) => {
+        const tl = gsap.timeline();
+
+        // 同时执行内容容器和背景动画
+        tl.to(".page-container", {
+          duration: 0.5,
+          opacity: 0,
+          y: 0,
+          ease: "power4.in"
+        })
+            .to(this.$refs.vantaBg.$el, {
+              opacity: 0,
+              duration: 0.8,
+              ease: "power2.in"
+            }, 0) // 0表示同时开始动画
+            .eventCallback("onComplete", resolve);
+      });
+    }
   }
 };
 </script>

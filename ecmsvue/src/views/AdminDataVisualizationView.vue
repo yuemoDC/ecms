@@ -1,5 +1,5 @@
 <template>
-  <AppNavbar />
+  <AppNavbar @navigate="handleNavigation"/>
   <div class="admin-visualization-view">
     <div class="view-header">
       <el-breadcrumb separator="/">
@@ -222,12 +222,16 @@ import { Refresh } from '@element-plus/icons-vue';
 import * as echarts from 'echarts';
 import axios from 'axios';
 import AppAdminNavbar from "@/components/AdminNavbar.vue";
+import {gsap} from "gsap";
 
 export default {
   name: 'AdminDataVisualizationView',
   components: {
     AppNavbar: AppAdminNavbar,
     Refresh
+  },
+  mounted() {
+    this.initAnimations();
   },
   setup() {
     // 图表引用
@@ -1119,6 +1123,90 @@ export default {
       handleChartTypeChange,
       handleTimeFilterChange
     };
+  },
+  methods:{
+    initAnimations() {
+      // 卡片逐个闪烁动画
+      gsap.fromTo(".data-card",
+          {
+            opacity: 0,
+            scale: 0.8,
+            filter: "brightness(200%)"
+          },
+          {
+            opacity: 1,
+            scale: 1,
+            filter: "brightness(100%)",
+            duration: 0.8,
+            stagger: 0.2,
+            ease: "power4.out",
+            delay: 0.5
+          }
+      );
+
+      // 图表选择器动画
+      gsap.fromTo(".chart-selector",
+          {
+            opacity: 0,
+            y: 30
+          },
+          {
+            opacity: 1,
+            y: 0,
+            duration: 0.6,
+            delay: 1.5,
+            ease: "back.out(1.7)"
+          }
+      );
+
+      // 图表卡片序列动画
+      gsap.fromTo(".chart-card",
+          {
+            opacity: 0,
+            y: 50
+          },
+          {
+            opacity: 1,
+            y: 0,
+            duration: 0.8,
+            stagger: 0.3,
+            delay: 2,
+            ease: "elastic.out(1, 0.5)"
+          }
+      );
+
+      // 标题和面包屑动画
+      gsap.fromTo(".view-header",
+          {
+            opacity: 0,
+            y: -20
+          },
+          {
+            opacity: 1,
+            y: 0,
+            duration: 0.5,
+            ease: "power2.out"
+          }
+      );
+    },
+    async handleNavigation(path) {
+      // 添加页面跳转确认
+      if (this.$route.path === path) return;
+
+      await this.leaveAnimation();
+      this.$router.push(path);
+    },
+    leaveAnimation() {
+      return new Promise((resolve) => {
+        gsap.to(".admin-visualization-view", {
+          duration: 0.2,
+          opacity: 0,
+          y: 100,
+          ease: "power4.in",
+          onComplete: resolve
+        });
+      });
+    }
   }
 };
 </script>
@@ -1126,6 +1214,7 @@ export default {
 <style scoped>
 .admin-visualization-view {
   padding: 20px;
+  will-change: transform, opacity;
 }
 
 .view-header {
@@ -1163,6 +1252,9 @@ export default {
 .data-card {
   margin-bottom: 20px;
   height: 100%;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
 }
 
 .card-header {
@@ -1184,11 +1276,33 @@ export default {
 
 .chart-selector {
   margin-bottom: 20px;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
 }
 
 .chart-card {
   margin-bottom: 20px;
   height: 100%;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+.data-card {
+  opacity: 0;
+}
+
+.chart-selector {
+  opacity: 0;
+}
+
+.chart-card {
+  opacity: 0;
+}
+
+.view-header {
+  opacity: 0;
 }
 
 .chart-container {
@@ -1226,6 +1340,12 @@ export default {
 
   .card-value {
     font-size: 20px;
+  }
+}
+@media (max-width: 768px) {
+  .data-card,
+  .chart-card {
+    transform: none !important;
   }
 }
 </style>

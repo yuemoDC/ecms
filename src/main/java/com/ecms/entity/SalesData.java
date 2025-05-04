@@ -35,4 +35,9 @@ public class SalesData {
 
     @Column(columnDefinition = "JSON")
     private String regionSales;  // 区域销售分布
+
+
+    // 添加 productId 字段
+    @Column
+    private Integer productId;
 }

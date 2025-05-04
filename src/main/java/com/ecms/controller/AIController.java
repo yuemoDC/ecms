@@ -233,4 +233,11 @@ public class AIController {
             this.daysToPredict = daysToPredict;
         }
     }
+
+
+
+
+
+
+
 }

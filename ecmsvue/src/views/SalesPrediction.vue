@@ -1,8 +1,7 @@
 <template>
-  <div class="sales-prediction-container">
+  <div class="sales-prediction-container page-container">
     <AppNavbar @navigate="handleNavigation"/> <!-- 引入导航栏组件 -->
     <VantaBackground ref="vantaBg" class="vanta-container"/>
-    <div class="page-container">
     <h1 class="page-title">智能销售预测分析</h1>
 
     <!-- 预测参数设置卡片 -->
@@ -27,7 +26,11 @@
                 placeholder="请选择商家"
                 readonly
             />
-            <button @click="fetchMerchants" class="btn btn-outline merchant-fetch-btn" :disabled="loadingMerchants">
+            <button
+                @click="fetchMerchants"
+                class="btn btn-outline merchant-fetch-btn"
+                :disabled="loadingMerchants"
+            >
               <i class="icon-refresh"></i>
               {{ loadingMerchants ? '获取中...' : '获取商家' }}
             </button>
@@ -76,15 +79,21 @@
                   v-for="merchant in merchants"
                   :key="merchant.merchantId"
                   class="merchant-selection-item"
-                  :class="{ 'selected': selectedMerchantId === merchant.merchantId }"
+                  :class="{ selected: selectedMerchantId === merchant.merchantId }"
                   @click="selectMerchant(merchant)"
               >
                 <div class="merchant-selection-header">
                   <h4 class="merchant-title">{{ merchant.merchantName || `商家 #${merchant.merchantId}` }}</h4>
                 </div>
                 <div class="merchant-info">
-                  <div class="merchant-contact"><i class="icon-contact"></i> {{ merchant.contactInfo || '暂无联系方式' }}</div>
-                  <div class="merchant-scope"><i class="icon-scope"></i> {{ merchant.businessScope || '暂无经营范围' }}</div>
+                  <div class="merchant-contact">
+                    <i class="icon-contact"></i>
+                    {{ merchant.contactInfo || '暂无联系方式' }}
+                  </div>
+                  <div class="merchant-scope">
+                    <i class="icon-scope"></i>
+                    {{ merchant.businessScope || '暂无经营范围' }}
+                  </div>
                 </div>
                 <div class="merchant-selection-footer">
                   <div class="merchant-id">ID: {{ merchant.merchantId }}</div>
@@ -97,19 +106,25 @@
             </div>
           </div>
           <div class="merchant-modal-footer">
-            <button @click="confirmMerchantSelection" class="btn btn-primary" :disabled="!selectedMerchantId">
+            <button
+                @click="confirmMerchantSelection"
+                class="btn btn-primary"
+                :disabled="!selectedMerchantId"
+            >
               确认选择
             </button>
-            <button @click="closeMerchantModal" class="btn btn-outline">
-              取消
-            </button>
+            <button @click="closeMerchantModal" class="btn btn-outline">取消</button>
           </div>
         </div>
       </div>
 
       <!-- 产品列表获取按钮 -->
       <div class="action-buttons" v-if="selectedView === 'product'">
-        <button @click="fetchProducts" class="btn btn-outline" :disabled="loadingProducts || !merchantId">
+        <button
+            @click="fetchProducts"
+            class="btn btn-outline"
+            :disabled="loadingProducts || !merchantId"
+        >
           <i class="icon-refresh"></i>
           {{ loadingProducts ? '获取中...' : '获取产品列表' }}
         </button>
@@ -123,7 +138,7 @@
               v-for="product in products"
               :key="product.productId"
               class="product-selection-item"
-              :class="{ 'selected': selectedProductId === product.productId }"
+              :class="{ selected: selectedProductId === product.productId }"
               @click="selectProduct(product.productId)"
           >
             <div class="product-selection-header">
@@ -131,7 +146,11 @@
               <div class="product-price">¥{{ product.price || '0.00' }}</div>
             </div>
             <div class="product-description">
-              {{ product.description ? (product.description.length > 60 ? product.description.substring(0, 60) + '...' : product.description) : '暂无描述' }}
+              {{ product.description
+                ? (product.description.length > 60
+                    ? product.description.substring(0, 60) + '...'
+                    : product.description)
+                : '暂无描述' }}
             </div>
             <div class="product-selection-footer">
               <div class="product-id">ID: {{ product.productId }}</div>
@@ -168,8 +187,11 @@
           <i class="icon-chart"></i>预测结果分析
         </div>
         <p class="card-subtitle">
-          {{ selectedView === 'all' ? '所有产品总体销售趋势预测' :
-            (selectedProductName ? `${selectedProductName} 销售趋势预测` : `产品 #${selectedProductId} 销售趋势预测`) }}
+          {{ selectedView === 'all'
+            ? '所有产品总体销售趋势预测'
+            : (selectedProductName
+                ? `${selectedProductName} 销售趋势预测`
+                : `产品 #${selectedProductId} 销售趋势预测`) }}
         </p>
       </div>
 
@@ -187,22 +209,32 @@
         </button>
       </div>
 
-      <!-- 处理无产品或其他错误信息的情况 -->
       <div v-else-if="noDataMessage" class="no-data-container">
         <div class="alert alert-warning">
           <i class="icon-info"></i> {{ noDataMessage }}
         </div>
         <div class="no-data-actions">
-          <button v-if="selectedView === 'product'" @click="fetchProducts" class="btn btn-outline">
+          <button
+              v-if="selectedView === 'product'"
+              @click="fetchProducts"
+              class="btn btn-outline"
+          >
             <i class="icon-refresh"></i> 获取产品列表
           </button>
-          <button v-else @click="fetchAllProductsPredictions" class="btn btn-primary">
+          <button
+              v-else
+              @click="fetchAllProductsPredictions"
+              class="btn btn-primary"
+          >
             <i class="icon-refresh"></i> 重新尝试
           </button>
         </div>
       </div>
 
-      <div v-else-if="predictionData.dates && predictionData.dates.length > 0" class="prediction-content">
+      <div
+          v-else-if="predictionData.dates && predictionData.dates.length > 0"
+          class="prediction-content"
+      >
         <!-- 图表区域 -->
         <div class="chart-container">
           <Line :data="chartData" :options="chartOptions" />
@@ -216,33 +248,48 @@
           <div class="stats-grid">
             <div class="stat-item">
               <div class="stat-label">预测周期</div>
-              <div class="stat-value">{{ predictionData.dates[0] }} 至 {{ predictionData.dates[predictionData.dates.length - 1] }}</div>
+              <div class="stat-value">
+                {{ predictionData.dates[0] }} 至
+                {{ predictionData.dates[predictionData.dates.length - 1] }}
+              </div>
             </div>
-
             <div class="stat-item">
               <div class="stat-label">平均预测销售额</div>
-              <div class="stat-value">¥{{ calculateAverage(predictionData.predictions).toFixed(2) }}</div>
+              <div class="stat-value">
+                ¥{{ calculateAverage(predictionData.predictions).toFixed(2) }}
+              </div>
             </div>
-
             <div class="stat-item">
               <div class="stat-label">最高预测销售额</div>
-              <div class="stat-value">¥{{ Math.max(...predictionData.predictions).toFixed(2) }}</div>
+              <div class="stat-value">
+                ¥{{ Math.max(...predictionData.predictions).toFixed(2) }}
+              </div>
             </div>
-
             <div class="stat-item">
               <div class="stat-label">最低预测销售额</div>
-              <div class="stat-value">¥{{ Math.min(...predictionData.predictions).toFixed(2) }}</div>
+              <div class="stat-value">
+                ¥{{ Math.min(...predictionData.predictions).toFixed(2) }}
+              </div>
             </div>
-
             <div class="stat-item">
               <div class="stat-label">总预测销售额</div>
-              <div class="stat-value">¥{{ calculateSum(predictionData.predictions).toFixed(2) }}</div>
+              <div class="stat-value">
+                ¥{{ calculateSum(predictionData.predictions).toFixed(2) }}
+              </div>
             </div>
-
             <div class="stat-item">
               <div class="stat-label">预测趋势</div>
-              <div class="stat-value" :class="calculateTrend(predictionData.predictions) >= 0 ? 'positive' : 'negative'">
-                <i :class="calculateTrend(predictionData.predictions) >= 0 ? 'icon-trending-up' : 'icon-trending-down'"></i>
+              <div
+                  class="stat-value"
+                  :class="calculateTrend(predictionData.predictions) >= 0 ? 'positive' : 'negative'"
+              >
+                <i
+                    :class="
+                    calculateTrend(predictionData.predictions) >= 0
+                      ? 'icon-trending-up'
+                      : 'icon-trending-down'
+                  "
+                ></i>
                 {{ calculateTrend(predictionData.predictions) >= 0 ? '上升' : '下降' }}
                 {{ Math.abs(calculateTrend(predictionData.predictions)).toFixed(2) }}%
               </div>
@@ -253,7 +300,17 @@
     </div>
 
     <!-- 相关产品卡片 -->
-    <div v-if="showResults && selectedView === 'all' && !loading && !error && !noDataMessage && products.length > 0" class="card related-card">
+    <div
+        v-if="
+        showResults &&
+        selectedView === 'all' &&
+        !loading &&
+        !error &&
+        !noDataMessage &&
+        products.length > 0
+      "
+        class="card related-card"
+    >
       <div class="card-header">
         <div class="card-title">
           <i class="icon-products"></i>相关产品销售情况
@@ -262,21 +319,47 @@
       </div>
 
       <div class="product-grid">
-        <div v-for="product in products.slice(0, 4)" :key="product.productId" class="product-item">
-          <h4 class="product-name">{{ product.productName || `产品 #${product.productId}` }}</h4>
+        <div
+            v-for="product in products.slice(0, 4)"
+            :key="product.productId"
+            class="product-item"
+        >
+          <h4 class="product-name">
+            {{ product.productName || `产品 #${product.productId}` }}
+          </h4>
           <p class="product-description">
-            {{ product.description ? (product.description.length > 50 ? product.description.substring(0, 50) + '...' : product.description) : '暂无描述' }}
+            {{
+              product.description
+                  ? (product.description.length > 50
+                      ? product.description.substring(0, 50) + '...'
+                      : product.description)
+                  : '暂无描述'
+            }}
           </p>
           <div class="product-price">¥{{ product.price || '0.00' }}</div>
-          <button @click="viewProductPrediction(product.productId)" class="btn btn-sm btn-outline">
+          <button
+              @click="viewProductPrediction(product.productId)"
+              class="btn btn-sm btn-outline"
+          >
             <i class="icon-chart"></i> 查看详细预测
           </button>
         </div>
       </div>
     </div>
 
-    <!-- 历史订单数据 -->
-    <div v-if="showResults && selectedProductId && selectedView === 'product' && !loading && !error && !noDataMessage && productOrders.length > 0" class="card orders-card">
+    <!-- 历史订单数据 (产品视图) -->
+    <div
+        v-if="
+        showResults &&
+        selectedProductId &&
+        selectedView === 'product' &&
+        !loading &&
+        !error &&
+        !noDataMessage &&
+        productOrders.length > 0
+      "
+        class="card orders-card"
+    >
       <div class="card-header">
         <div class="card-title">
           <i class="icon-history"></i>历史订单数据
@@ -296,24 +379,45 @@
           </tr>
           </thead>
           <tbody>
-          <tr v-for="order in productOrders.slice(0, 5)" :key="order.orderId">
+          <tr
+              v-for="order in productOrders.slice(0, 5)"
+              :key="order.orderId"
+          >
             <td>{{ order.orderNumber || '未知' }}</td>
             <td>{{ formatDate(order.createdAt) }}</td>
             <td>{{ getOrderQuantity(order) }}</td>
             <td>¥{{ order.totalAmount || '0.00' }}</td>
-            <td><span :class="getStatusClass(order)">{{ getStatusText(order) }}</span></td>
+            <td>
+                <span :class="getStatusClass(order)">
+                  {{ getStatusText(order) }}
+                </span>
+            </td>
           </tr>
           </tbody>
         </table>
         <div v-if="productOrders.length > 5" class="view-more">
-          <router-link :to="'/orders?productId=' + selectedProductId" class="btn btn-sm btn-outline">
+          <router-link
+              :to="`/orders?productId=${selectedProductId}`"
+              class="btn btn-sm btn-outline"
+          >
             <i class="icon-more"></i> 查看更多订单
           </router-link>
         </div>
       </div>
     </div>
 
-    <div v-if="showResults && selectedProductId && selectedView === 'product' && !loading && !error && !noDataMessage && productOrders.length === 0" class="card orders-card">
+    <div
+        v-if="
+        showResults &&
+        selectedProductId &&
+        selectedView === 'product' &&
+        !loading &&
+        !error &&
+        !noDataMessage &&
+        productOrders.length === 0
+      "
+        class="card orders-card"
+    >
       <div class="card-header">
         <div class="card-title">
           <i class="icon-history"></i>历史订单数据
@@ -323,7 +427,40 @@
         <i class="icon-info"></i> 暂无该产品的历史订单数据
       </div>
     </div>
-  </div>
+
+    <!-- AI 建议卡片 -->
+    <div
+        v-if="showResults && predictionData.predictions.length > 0"
+        class="card ai-suggestion-card"
+    >
+      <div class="card-header">
+        <div class="card-title">
+          <i class="icon-lightbulb"></i>AI 智能优化建议
+        </div>
+        <p class="card-subtitle">基于预测结果生成个性化运营建议</p>
+      </div>
+
+      <div class="action-buttons">
+        <button
+            @click="fetchAISuggestion"
+            class="btn btn-primary"
+            :disabled="loadingSuggestion"
+        >
+          <i class="icon-robot"></i>
+          {{ loadingSuggestion ? '生成中...' : '点击生成 AI 建议' }}
+        </button>
+      </div>
+
+      <div v-if="showSuggestion" class="ai-suggestion-content">
+        <div v-if="loadingSuggestion" class="loading-container">
+          <div class="spinner"></div>
+          <p>AI 正在分析销售趋势并生成建议...</p>
+        </div>
+        <div v-else class="suggestion-text">
+          <p style="white-space: pre-wrap;">{{ aiSuggestion }}</p>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -336,7 +473,7 @@ import AppNavbar from "@/components/AdminNavbar.vue";
 import VantaBackground from "@/assets/VantaBackground.vue";
 import {gsap} from "gsap";
 
-// Register Chart.js components
+// 注册 Chart.js 组件
 Chart.register(...registerables);
 
 export default {
@@ -385,7 +522,12 @@ export default {
     const error = ref(null);
     const formError = ref(null);
     const showResults = ref(false);
-    const noDataMessage = ref(null); // 新增：用于显示无数据或无产品的情况
+    const noDataMessage = ref(null);
+
+    // AI 建议相关
+    const aiSuggestion = ref('');
+    const loadingSuggestion = ref(false);
+    const showSuggestion = ref(false);
 
     // 数据
     const products = ref([]);
@@ -395,234 +537,98 @@ export default {
       predictions: []
     });
 
-    // 计算属性
-    const isFormValid = computed(() => {
-      if (!merchantId.value) return false;
-      if (selectedView.value === 'product' && !selectedProductId.value) return false;
-      return true;
-    });
-
-    const selectedProductName = computed(() => {
-      if (!selectedProductId.value) return '';
-      const product = products.value.find(p => p.productId === selectedProductId.value);
-      return product ? product.productName : '';
-    });
-
-    // 图表数据
-    const chartData = computed(() => {
-      return {
-        labels: predictionData.dates || [],
-        datasets: [{
-          label: selectedView.value === 'all' ? '所有产品销售预测' :
-              (selectedProductName.value ? `${selectedProductName.value} 销售预测` : `产品 #${selectedProductId.value} 销售预测`),
-          backgroundColor: 'rgba(53, 162, 235, 0.2)',
-          borderColor: 'rgba(53, 162, 235, 1)',
-          pointBackgroundColor: 'rgba(53, 162, 235, 1)',
-          pointBorderColor: '#fff',
-          pointHoverBackgroundColor: '#fff',
-          pointHoverBorderColor: 'rgba(53, 162, 235, 1)',
-          borderWidth: 2,
-          tension: 0.3,
-          data: predictionData.predictions || []
-        }]
-      };
-    });
-
-    // 图表选项
-    const chartOptions = {
-      responsive: true,
-      maintainAspectRatio: false,
-      scales: {
-        y: {
-          beginAtZero: false,
-          title: {
-            display: true,
-            text: '销售金额 (¥)',
-            font: {
-              size: 14,
-              weight: 'bold'
-            }
-          },
-          grid: {
-            color: 'rgba(0, 0, 0, 0.05)'
-          }
-        },
-        x: {
-          title: {
-            display: true,
-            text: '日期',
-            font: {
-              size: 14,
-              weight: 'bold'
-            }
-          },
-          grid: {
-            color: 'rgba(0, 0, 0, 0.05)'
-          }
-        }
-      },
-      plugins: {
-        tooltip: {
-          backgroundColor: 'rgba(0, 0, 0, 0.7)',
-          titleFont: {
-            size: 14
-          },
-          bodyFont: {
-            size: 13
-          },
-          callbacks: {
-            label: function(context) {
-              return `销售额: ¥${context.raw.toFixed(2)}`;
-            }
-          }
-        },
-        legend: {
-          position: 'top',
-          labels: {
-            font: {
-              size: 14
-            }
-          }
-        }
-      }
-    };
-
     // 获取商家列表
     const fetchMerchants = async () => {
       loadingMerchants.value = true;
       formError.value = null;
       showMerchantModal.value = true;
-
       try {
-        console.log("发送请求到:", `http://localhost:8080/api/merchants`);
-        const response = await axios.get(`http://localhost:8080/api/merchants`, {
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-          }
-        });
-
-        console.log("获取商家列表响应:", response);
-
-        if (!response.data || !Array.isArray(response.data)) {
-          console.error("返回的数据不是数组:", response.data);
-          throw new Error('返回的数据格式不正确');
+        const res = await axios.get('http://localhost:8080/api/merchants');
+        if (Array.isArray(res.data)) {
+          merchants.value = res.data;
+        } else {
+          throw new Error('返回数据格式不正确');
         }
-
-        merchants.value = response.data;
-        console.log("获取到商家数量:", merchants.value.length);
-      } catch (err) {
-        console.error('获取商家列表失败:', err);
-        formError.value = `无法获取商家列表: ${err.message || '请检查网络连接和服务器状态'}`;
+      } catch (e) {
+        formError.value = `无法获取商家列表: ${e.message}`;
       } finally {
         loadingMerchants.value = false;
       }
     };
 
     // 选择商家
-    const selectMerchant = (merchant) => {
-      selectedMerchantId.value = merchant.merchantId;
-      selectedMerchantName.value = merchant.merchantName || `商家 #${merchant.merchantId}`;
-      console.log("已选择商家:", selectedMerchantName.value);
+    const selectMerchant = (m) => {
+      selectedMerchantId.value = m.merchantId;
+      selectedMerchantName.value = m.merchantName || `商家 #${m.merchantId}`;
     };
 
-    // 确认商家选择
     const confirmMerchantSelection = () => {
       if (selectedMerchantId.value) {
         merchantId.value = selectedMerchantId.value;
         closeMerchantModal();
-
-        // 清除之前的产品选择和结果
         selectedProductId.value = null;
         products.value = [];
         showResults.value = false;
-        // 清除之前的错误和无数据消息
         error.value = null;
         noDataMessage.value = null;
       }
     };
 
-    // 关闭商家选择弹窗
     const closeMerchantModal = () => {
       showMerchantModal.value = false;
     };
 
-    // 获取所有产品销售预测
+    // 获取所有产品的预测
     const fetchAllProductsPredictions = async () => {
       loading.value = true;
       error.value = null;
-      noDataMessage.value = null; // 清除之前的无数据消息
-
+      noDataMessage.value = null;
       try {
-        console.log("发送预测请求:", `http://localhost:8080/api/ai/sales-prediction/${merchantId.value}`);
-        const response = await axios.get(`http://localhost:8080/api/ai/sales-prediction/${merchantId.value}`);
-        console.log("获取预测数据响应:", response);
-
-        // 检查是否返回了错误消息
-        if (response.data.message) {
-          noDataMessage.value = response.data.message;
-          // 如果没有产品，尝试获取产品列表以确认
-          if (response.data.message.includes('未找到此商家的产品')) {
-            await fetchProducts();
-          }
+        const res = await axios.get(`http://localhost:8080/api/ai/sales-prediction/${merchantId.value}`);
+        if (res.data.message) {
+          noDataMessage.value = res.data.message;
           predictionData.dates = [];
           predictionData.predictions = [];
-        } else if (response.data.dates && response.data.predictions) {
-          // 正常更新预测数据
-          predictionData.dates = response.data.dates;
-          predictionData.predictions = response.data.predictions;
+          if (res.data.message.includes('未找到此商家的产品')) {
+            await fetchProducts();
+          }
         } else {
-          // 数据格式不符合预期
-          throw new Error('返回的数据格式不正确');
+          predictionData.dates = res.data.dates || [];
+          predictionData.predictions = res.data.predictions || [];
         }
-
-        // 标记显示结果
         showResults.value = true;
-      } catch (err) {
-        console.error('获取预测数据失败:', err);
-        error.value = err.response?.data?.message || '无法获取预测数据，请检查商家ID是否正确';
+      } catch (e) {
+        error.value = e.response?.data?.message || '无法获取预测数据';
       } finally {
         loading.value = false;
       }
     };
 
-    // 获取单个产品销售预测
+    // 获取单个产品的预测
     const fetchProductPredictions = async () => {
       if (!selectedProductId.value) {
-        error.value = '请选择要预测的产品';
+        formError.value = '请选择要预测的产品';
         return;
       }
-
       loading.value = true;
       error.value = null;
-      noDataMessage.value = null; // 清除之前的无数据消息
-
+      noDataMessage.value = null;
       try {
-        console.log("发送产品预测请求:", `http://localhost:8080/api/ai/sales-prediction-by-product/${merchantId.value}/${selectedProductId.value}/${daysToPredict.value}`);
-        const response = await axios.get(
+        const res = await axios.get(
             `http://localhost:8080/api/ai/sales-prediction-by-product/${merchantId.value}/${selectedProductId.value}/${daysToPredict.value}`
         );
-        console.log("获取产品预测响应:", response);
-
-        // 检查是否返回了错误消息
-        if (response.data.message) {
-          noDataMessage.value = response.data.message;
+        if (res.data.message) {
+          noDataMessage.value = res.data.message;
           predictionData.dates = [];
           predictionData.predictions = [];
         } else {
-          // 更新预测数据
-          predictionData.dates = response.data.dates || [];
-          predictionData.predictions = response.data.predictions || [];
+          predictionData.dates = res.data.dates || [];
+          predictionData.predictions = res.data.predictions || [];
         }
-
-        // 获取产品的历史订单
         await fetchProductOrders();
-
-        // 标记显示结果
         showResults.value = true;
-      } catch (err) {
-        console.error('获取产品预测数据失败:', err);
-        error.value = err.response?.data?.message || '无法获取产品预测数据';
+      } catch (e) {
+        error.value = e.response?.data?.message || '无法获取产品预测数据';
       } finally {
         loading.value = false;
       }
@@ -630,94 +636,47 @@ export default {
 
     // 获取产品列表
     const fetchProducts = async () => {
-      console.log("开始获取产品列表，商家ID:", merchantId.value);
-
       if (!merchantId.value) {
         formError.value = '请先选择商家';
         return;
       }
-
       loadingProducts.value = true;
       formError.value = null;
-
       try {
-        // 调用特定商家的产品API
-        console.log("发送请求到:", `http://localhost:8080/api/products/merchant/${merchantId.value}`);
-        const response = await axios.get(`http://localhost:8080/api/products/merchant/${merchantId.value}`, {
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-          }
-        });
-
-        console.log("获取产品列表响应:", response);
-
-        // 确保response.data存在且是数组
-        if (!response.data || !Array.isArray(response.data)) {
-          console.error("返回的数据不是数组:", response.data);
-          throw new Error('返回的数据格式不正确');
-        }
-
-        console.log("获取到商家产品数量:", response.data.length);
-
-        // 设置产品列表
-        products.value = response.data;
-
-        // 如果没有产品，显示提示信息
+        const res = await axios.get(`http://localhost:8080/api/products/merchant/${merchantId.value}`);
+        if (!Array.isArray(res.data)) throw new Error('返回数据格式不正确');
+        products.value = res.data;
         if (products.value.length === 0) {
           formError.value = '未找到该商家的产品';
-          if (selectedView.value === 'product') {
-            noDataMessage.value = '该商家没有产品可供分析';
-          }
-        }
-        // 如果只有一个产品，自动选择它
-        else if (products.value.length === 1) {
+          noDataMessage.value = selectedView.value === 'product'
+              ? '该商家没有产品可供分析'
+              : null;
+        } else if (products.value.length === 1) {
           selectProduct(products.value[0].productId);
         } else {
-          // 有多个产品时，清除当前选择，让用户重新选择
           selectedProductId.value = null;
         }
-      } catch (err) {
-        console.error('获取产品列表失败:', err);
-        // 提供更详细的错误信息
-        formError.value = `无法获取产品列表: ${err.message || '请检查网络连接和服务器状态'}`;
+      } catch (e) {
+        formError.value = `无法获取产品列表: ${e.message}`;
         products.value = [];
       } finally {
         loadingProducts.value = false;
       }
     };
 
-    // 选择产品方法
-    const selectProduct = (productId) => {
-      console.log("选择产品:", productId);
-      selectedProductId.value = productId;
-
-      // 清除之前的无数据消息
+    // 选择产品
+    const selectProduct = (id) => {
+      selectedProductId.value = id;
       noDataMessage.value = null;
-
-      // 找到选中的产品并显示提示
-      const selectedProduct = products.value.find(p => p.productId === productId);
-      if (selectedProduct) {
-        formError.value = null; // 清除之前的错误
-        console.log("已选择产品:", selectedProduct.productName || `产品 #${productId}`);
-      }
+      formError.value = null;
     };
 
-    // 获取产品的历史订单
+    // 获取订单数据
     const fetchProductOrders = async () => {
       try {
-        console.log("获取订单列表:", `http://localhost:8080/api/orders/${merchantId.value}`);
-        const response = await axios.get(`http://localhost:8080/api/orders/${merchantId.value}`);
-        console.log("获取订单响应:", response);
-
-        // 过滤与所选产品相关的订单
-        productOrders.value = response.data.filter(order => {
-          return order.merchantId === merchantId.value;
-          // 如果订单中包含产品信息，则可以进一步过滤
-          // return order.merchantId === merchantId.value && order.productId === selectedProductId.value;
-        });
-      } catch (err) {
-        console.error('获取产品订单失败:', err);
+        const res = await axios.get(`http://localhost:8080/api/orders/${merchantId.value}`);
+        productOrders.value = res.data.filter(o => o.merchantId === merchantId.value);
+      } catch {
         productOrders.value = [];
       }
     };
@@ -726,106 +685,140 @@ export default {
     const startPrediction = () => {
       formError.value = null;
       error.value = null;
-      noDataMessage.value = null; // 清除之前的无数据消息
-
+      noDataMessage.value = null;
       if (!merchantId.value) {
         formError.value = '请选择商家';
         return;
       }
-
-      if (selectedView.value === 'product' && !selectedProductId.value) {
-        formError.value = '请选择要预测的产品';
-        return;
-      }
-
       if (selectedView.value === 'all') {
         fetchAllProductsPredictions();
       } else {
-        fetchProductPredictions();
+        if (!selectedProductId.value) {
+          formError.value = '请选择要预测的产品';
+        } else {
+          fetchProductPredictions();
+        }
       }
     };
 
-    // 查看特定产品的预测
-    const viewProductPrediction = (productId) => {
-      selectedProductId.value = productId;
+    // 查看单个产品预测
+    const viewProductPrediction = (id) => {
+      selectedProductId.value = id;
       selectedView.value = 'product';
       fetchProductPredictions();
     };
 
-    // 计算统计指标
-    const calculateAverage = (data) => {
-      if (!data || data.length === 0) return 0;
-      return data.reduce((sum, val) => sum + val, 0) / data.length;
-    };
-
-    const calculateSum = (data) => {
-      if (!data || data.length === 0) return 0;
-      return data.reduce((sum, val) => sum + val, 0);
-    };
-
-    const calculateTrend = (data) => {
-      if (!data || data.length < 2) return 0;
-      const firstValue = data[0];
-      const lastValue = data[data.length - 1];
-      return ((lastValue - firstValue) / firstValue) * 100;
-    };
-
-    // 格式化日期
-    const formatDate = (dateString) => {
-      if (!dateString) return '未知日期';
+    // AI 建议调用
+    const fetchAISuggestion = async () => {
+      loadingSuggestion.value = true;
+      showSuggestion.value = true;
+      aiSuggestion.value = '';
       try {
-        const date = new Date(dateString);
-        return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-      } catch (e) {
-        return '日期格式错误';
+        let url = '';
+        if (selectedView.value === 'product') {
+          url = `http://localhost:8080/api/ai/suggestion/${merchantId.value}/${selectedProductId.value}/${daysToPredict.value}`;
+        } else {
+          url = `http://localhost:8080/api/ai/suggestion/${merchantId.value}`;
+        }
+        const res = await axios.get(url);
+        aiSuggestion.value = res.data.suggestion || '未能生成建议';
+      } catch {
+        aiSuggestion.value = 'AI建议获取失败，请稍后重试。';
+      } finally {
+        loadingSuggestion.value = false;
       }
     };
 
-    // 获取订单中的产品数量
-    const getOrderQuantity = (order) => {
-      return order.quantity || 1;
+    // 统计计算
+    const calculateAverage = (arr) =>
+        arr.length ? arr.reduce((s, v) => s + v, 0) / arr.length : 0;
+    const calculateSum = (arr) => (arr.length ? arr.reduce((s, v) => s + v, 0) : 0);
+    const calculateTrend = (arr) =>
+        arr.length > 1 ? ((arr[arr.length - 1] - arr[0]) / arr[0]) * 100 : 0;
+    const formatDate = (s) => {
+      try {
+        const d = new Date(s);
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(
+            d.getDate()
+        ).padStart(2, '0')}`;
+      } catch {
+        return '日期格式错误';
+      }
+    };
+    const getOrderQuantity = (o) => o.quantity || 1;
+    const statusMap = {
+      PENDING: '待处理',
+      PROCESSING: '处理中',
+      SHIPPED: '已发货',
+      DELIVERED: '已送达',
+      COMPLETED: '已完成',
+      CANCELLED: '已取消'
+    };
+    const getStatusText = (o) => statusMap[o.status] || o.status || '未知状态';
+    const statusClassMap = {
+      PENDING: 'status-pending',
+      PROCESSING: 'status-processing',
+      SHIPPED: 'status-shipped',
+      DELIVERED: 'status-delivered',
+      COMPLETED: 'status-completed',
+      CANCELLED: 'status-cancelled'
+    };
+    const getStatusClass = (o) => statusClassMap[o.status] || '';
+
+    // 图表数据与配置
+    const chartData = computed(() => ({
+      labels: predictionData.dates,
+      datasets: [
+        {
+          label:
+              selectedView.value === 'all'
+                  ? '所有产品销售预测'
+                  : selectedProductName.value
+                      ? `${selectedProductName.value} 销售预测`
+                      : `产品 #${selectedProductId.value} 销售预测`,
+          data: predictionData.predictions,
+          tension: 0.3,
+          borderWidth: 2,
+          pointBackgroundColor: 'rgba(53,162,235,1)',
+          pointBorderColor: '#fff',
+          borderColor: 'rgba(53,162,235,1)',
+          backgroundColor: 'rgba(53,162,235,0.2)'
+        }
+      ]
+    }));
+    const chartOptions = {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        y: { beginAtZero: false, title: { display: true, text: '销售金额 (¥)' }, grid: { color: 'rgba(0,0,0,0.05)' } },
+        x: { title: { display: true, text: '日期' }, grid: { color: 'rgba(0,0,0,0.05)' } }
+      },
+      plugins: {
+        tooltip: {
+          callbacks: {
+            label(ctx) {
+              return `销售额: ¥${ctx.raw.toFixed(2)}`;
+            }
+          }
+        },
+        legend: { position: 'top' }
+      }
     };
 
-    // 获取订单状态文本
-    const getStatusText = (order) => {
-      if (!order || !order.status) return '未知状态';
-
-      const statusMap = {
-        'PENDING': '待处理',
-        'PROCESSING': '处理中',
-        'SHIPPED': '已发货',
-        'DELIVERED': '已送达',
-        'COMPLETED': '已完成',
-        'CANCELLED': '已取消'
-      };
-
-      return statusMap[order.status] || order.status;
-    };
-
-    // 获取订单状态CSS类
-    const getStatusClass = (order) => {
-      if (!order || !order.status) return '';
-
-      const statusClassMap = {
-        'PENDING': 'status-pending',
-        'PROCESSING': 'status-processing',
-        'SHIPPED': 'status-shipped',
-        'DELIVERED': 'status-delivered',
-        'COMPLETED': 'status-completed',
-        'CANCELLED': 'status-cancelled'
-      };
-
-      return statusClassMap[order.status] || '';
-    };
+    // 计算属性
+    const isFormValid = computed(
+        () => merchantId.value && (selectedView.value === 'all' || selectedProductId.value)
+    );
+    const selectedProductName = computed(() => {
+      const p = products.value.find((x) => x.productId === selectedProductId.value);
+      return p ? p.productName : '';
+    });
 
     return {
-      // 表单参数
       merchantId,
       selectedProductId,
       daysToPredict,
       selectedView,
-
-      // 商家选择相关
       merchants,
       loadingMerchants,
       showMerchantModal,
@@ -835,27 +828,19 @@ export default {
       selectMerchant,
       confirmMerchantSelection,
       closeMerchantModal,
-
-      // 状态控制
       loading,
       loadingProducts,
       error,
       formError,
       showResults,
-      noDataMessage, // 添加新的状态变量
-
-      // 数据
+      noDataMessage,
+      aiSuggestion,
+      loadingSuggestion,
+      showSuggestion,
+      fetchAISuggestion,
       products,
       productOrders,
       predictionData,
-
-      // 计算属性
-      isFormValid,
-      selectedProductName,
-      chartData,
-      chartOptions,
-
-      // 方法
       fetchProducts,
       startPrediction,
       viewProductPrediction,
@@ -866,6 +851,10 @@ export default {
       getOrderQuantity,
       getStatusText,
       getStatusClass,
+      chartData,
+      chartOptions,
+      isFormValid,
+      selectedProductName,
       selectProduct
     };
   },
@@ -899,6 +888,7 @@ export default {
   }
 };
 </script>
+
 
 <style scoped>
 /* 基础样式 */
@@ -1679,5 +1669,157 @@ label {
   .merchant-input-group {
     flex-direction: column;
   }
+}
+
+.page-title {
+  margin-bottom: 24px;
+  font-size: 32px;
+  font-weight: 700;
+  color: #2c3e50;
+  text-align: center;
+  position: relative;
+}
+
+.page-title::after {
+  content: '';
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100px;
+  height: 4px;
+  background: linear-gradient(90deg, #1abc9c, #16a085);
+  border-radius: 3px;
+}
+
+.card {
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.5), #f0f4f8);
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  padding: 24px;
+  margin-bottom: 30px;
+  transition: all 0.3s ease;
+  opacity: 0;
+  transform: translateY(20px);
+  animation: fadeInUp 0.5s ease forwards;
+}
+
+@keyframes fadeInUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.card-title {
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 10px;
+  color: #34495e;
+  display: flex;
+  align-items: center;
+}
+
+.card-subtitle {
+  font-size: 14px;
+  color: #6c7a89;
+  font-style: italic;
+  margin-bottom: 16px;
+}
+
+.btn {
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease-in-out;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn i {
+  font-size: 16px;
+  margin-right: 6px;
+}
+
+.btn:hover {
+  transform: scale(1.03);
+}
+
+.btn-primary {
+  background-color: #1abc9c;
+  color: white;
+  border: none;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background-color: #16a085;
+}
+
+.btn-outline {
+  background: transparent;
+  color: #1abc9c;
+  border: 1px solid #1abc9c;
+}
+
+.btn-outline:hover:not(:disabled) {
+  background: #e8f8f5;
+}
+
+.ai-suggestion-card {
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(8px);
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.1);
+}
+
+.suggestion-text p {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 15px;
+  line-height: 1.6;
+  color: #2c3e50;
+  white-space: pre-wrap;
+}
+
+.chart-container {
+  height: 400px;
+  padding: 16px;
+  background-color: #f9f9fb;
+  border-radius: 12px;
+  box-shadow: inset 0 0 8px rgba(0,0,0,0.03);
+  margin-bottom: 32px;
+}
+
+.stats-grid .stat-item {
+  background-color: #ffffff;
+  border: 1px solid #ecf0f1;
+  border-radius: 8px;
+  padding: 16px;
+  transition: all 0.3s;
+}
+
+.stats-grid .stat-item:hover {
+  box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+  transform: translateY(-3px);
+}
+
+.stat-value.positive {
+  color: #27ae60;
+  display: flex;
+  align-items: center;
+}
+
+.stat-value.negative {
+  color: #e74c3c;
+  display: flex;
+  align-items: center;
+}
+
+.stat-value i {
+  margin-right: 6px;
+  font-size: 16px;
 }
 </style>

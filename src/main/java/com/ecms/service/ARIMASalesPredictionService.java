@@ -54,11 +54,10 @@ public class ARIMASalesPredictionService {
      * @param merchantId 商家ID
      * @return 销售预测数据
      */
+
     public Map<String, Object> predictSalesTrend(Integer merchantId) {
         try {
             logger.info("开始为商家ID={}生成销售预测", merchantId);
-
-            // 确认是否有商家的产品
             List<Product> products = productService.getProductsByMerchantId(merchantId);
             if (products.isEmpty()) {
                 logger.warn("商家ID={}没有产品", merchantId);
@@ -66,45 +65,29 @@ public class ARIMASalesPredictionService {
                 result.put("message", "未找到此商家的产品");
                 return result;
             }
-
-            // 获取商家历史销售数据
             List<Double> historicalSales = getHistoricalSalesData(merchantId, null);
-
             if (historicalSales.isEmpty()) {
                 logger.warn("未找到商家ID={}的历史销售数据", merchantId);
                 return generateRandomMerchantPrediction(merchantId, 30);
             }
-
-            // 需要预测的天数
             int daysToPredict = 30;
-
-            // 使用ARIMA模型进行预测
-            List<Double> predictions = performARIMAPrediction(historicalSales, daysToPredict);
-
-            // 生成未来日期
+            List<Double> predictions = performARIMAPrediction(historicalSales, daysToPredict, merchantId);
             List<String> futureDates = generateFutureDates(daysToPredict);
-
-            // 保存预测结果到数据库
             try {
-                // 使用第一个产品ID作为整体商家预测
                 savePredictions(merchantId, products.get(0).getProductId(), futureDates, predictions);
             } catch (Exception e) {
                 logger.error("保存预测结果到数据库失败", e);
-                // 继续执行，不影响API返回结果
             }
-
-            // 组装结果
             Map<String, Object> result = new HashMap<>();
             result.put("dates", futureDates);
             result.put("predictions", predictions);
-
             return result;
         } catch (Exception e) {
             logger.error("商家销售预测生成失败", e);
-            // 发生错误时返回模拟数据
             return generateRandomMerchantPrediction(merchantId, 30);
         }
     }
+
 
     /**
      * 预测特定产品的销售
@@ -116,50 +99,34 @@ public class ARIMASalesPredictionService {
     public Map<String, Object> predictProductSales(Integer merchantId, Integer productId, int daysToPredict) {
         try {
             logger.info("开始为商家ID={}, 产品ID={}生成销售预测", merchantId, productId);
-
-            // 验证产品是否存在
             List<Product> products = productService.getProductsByMerchantId(merchantId);
             Product targetProduct = null;
-
             for (Product product : products) {
                 if (product.getProductId().equals(productId)) {
                     targetProduct = product;
                     break;
                 }
             }
-
             if (targetProduct == null) {
                 logger.warn("商家ID={}, 产品ID={}不存在", merchantId, productId);
                 return generateSimulatedForecast(merchantId, productId, daysToPredict);
             }
-
-            // 获取特定产品的历史销售数据
             List<Double> historicalSales = getHistoricalSalesData(merchantId, productId);
-
             if (historicalSales.isEmpty()) {
                 logger.warn("未找到产品ID={}的历史销售数据", productId);
                 return generateSimulatedForecast(merchantId, productId, daysToPredict);
             }
-
-            // 使用ARIMA模型进行预测
-            List<Double> predictions = performARIMAPrediction(historicalSales, daysToPredict);
-
-            // 生成未来日期
+            List<Double> predictions = performARIMAPrediction(historicalSales, daysToPredict, merchantId);
             List<String> futureDates = generateFutureDates(daysToPredict);
-
-            // 保存预测结果到数据库
             try {
                 savePredictions(merchantId, productId, futureDates, predictions);
             } catch (Exception e) {
                 logger.error("保存产品预测结果到数据库失败", e);
             }
-
-            // 组装结果
             Map<String, Object> result = new HashMap<>();
             result.put("productId", productId);
             result.put("dates", futureDates);
             result.put("predictions", predictions);
-
             return result;
         } catch (Exception e) {
             logger.error("产品销售预测生成失败，商家ID={}, 产品ID={}", merchantId, productId, e);
@@ -179,7 +146,7 @@ public class ARIMASalesPredictionService {
      * @param productId 产品ID（可以为null表示所有产品）
      * @return 历史销售值列表
      */
-    private List<Double> getHistoricalSalesData(Integer merchantId, Integer productId) {
+    public List<Double> getHistoricalSalesData(Integer merchantId, Integer productId) {
         try {
             // 先检查商家是否存在
             if (merchantId == null || !merchantRepository.existsById(merchantId)) {
@@ -281,28 +248,23 @@ public class ARIMASalesPredictionService {
      * @param daysToPredict 预测天数
      * @return 预测值
      */
-    private List<Double> performARIMAPrediction(List<Double> historicalData, int daysToPredict) {
+    private List<Double> performARIMAPrediction(List<Double> historicalData, int daysToPredict, int merchantId) {
         try {
             if (historicalData.isEmpty()) {
                 logger.warn("历史数据为空，无法执行ARIMA预测");
                 return generateSeasonalData(100, 250, daysToPredict);
             }
 
-            // 对于非常短的历史数据，使用更简单的模型
             if (historicalData.size() < 10) {
-                logger.info("历史数据太短(大小={})，使用简单预测代替ARIMA",
-                        historicalData.size());
+                logger.info("历史数据太短(大小={})，使用简单预测代替ARIMA", historicalData.size());
                 return simpleExponentialSmoothing(historicalData, daysToPredict);
             }
 
-            // 应用ARIMA模型
             List<Double> predictions = arimaPredictionService.forecastARIMA(
-                    historicalData, DEFAULT_P, DEFAULT_D, DEFAULT_Q, daysToPredict);
+                    historicalData, DEFAULT_P, DEFAULT_D, DEFAULT_Q, daysToPredict, merchantId);
 
-            // 应用平滑降低波动性
             predictions = arimaPredictionService.smoothForecast(predictions, SMOOTHING_ALPHA);
 
-            // 确保预测值合理（没有负值）
             for (int i = 0; i < predictions.size(); i++) {
                 if (predictions.get(i) < 0) {
                     predictions.set(i, 0.0);
@@ -312,8 +274,6 @@ public class ARIMASalesPredictionService {
             return predictions;
         } catch (Exception e) {
             logger.error("ARIMA预测中出错", e);
-
-            // 回退到更简单的预测方法
             if (!historicalData.isEmpty()) {
                 return simpleExponentialSmoothing(historicalData, daysToPredict);
             } else {
@@ -321,6 +281,7 @@ public class ARIMASalesPredictionService {
             }
         }
     }
+
 
     /**
      * 简单指数平滑预测（作为回退方法）

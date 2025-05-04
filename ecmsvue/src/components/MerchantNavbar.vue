@@ -12,12 +12,12 @@
         <el-menu-item index="orders">订单管理</el-menu-item>
         <el-menu-item index="merchant-application">商家入驻申请</el-menu-item>
 
-        <div class="logout-wrapper">
-          <div class="theme-toggle" @click="toggleTheme">
-            {{ isDark ? '☀️ 日间模式' : '🌙 夜间模式' }}
-          </div>
-          <el-menu-item index="logout" @click="handleLogout">登出</el-menu-item>
-        </div>
+<!--        <div class="logout-wrapper">-->
+<!--          <div class="theme-toggle" @click="toggleTheme">-->
+<!--            {{ isDark ? '☀️ 日间模式' : '🌙 夜间模式' }}-->
+<!--          </div>-->
+        <el-menu-item index="logout" @click="handleLogout">登出</el-menu-item>
+<!--        </div>-->
       </el-menu>
     </div>
   </el-header>

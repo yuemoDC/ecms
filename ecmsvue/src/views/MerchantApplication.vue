@@ -1,7 +1,7 @@
 <template>
   <AppNavbar @navigate="handleNavigation"/> <!-- 引入导航栏组件 -->
-  <div class="container">
 
+  <div class="container">
     <el-container>
       <el-header>
         <h2>商家入驻申请</h2>
@@ -112,11 +112,13 @@ import { ref, onMounted } from 'vue';
 import { ElMessage } from 'element-plus';
 import axios from 'axios';
 import AppAdminNavbar from "@/components/MerchantNavbar.vue";
-import {gsap} from "gsap"; // 引入导航栏组件
+import {gsap} from "gsap";
 
 export default {
   name: 'MerchantApplication',
-  components: { AppNavbar: AppAdminNavbar },
+  components: {
+    AppNavbar: AppAdminNavbar,
+  },
   setup() {
     const currentUser = ref(null); // 用来存储当前登录的用户信息
     let currentUserId = localStorage.getItem('userId'); // 获取当前登录用户的 userId

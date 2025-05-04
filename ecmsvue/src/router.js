@@ -11,6 +11,7 @@ import MerchantApplication from "@/views/MerchantApplication.vue";
 import BulkSalesPredictionView from'./views/BulkSalesPrediction.vue';
 import AIhome from "@/views/AIhome.vue";
 import SplashScreen from "@/animation/SplashScreen.vue";
+import OutScreen from "@/animation/OutScreen.vue";
 
 
 const routes = [
@@ -84,6 +85,11 @@ const routes = [
         path: '/SplashScreen',
         name: 'SplashScreen',
         component: SplashScreen,
+    },
+    {
+        path: '/OutScreen',
+        name: 'OutScreen',
+        component: OutScreen,
     }
 ];
 

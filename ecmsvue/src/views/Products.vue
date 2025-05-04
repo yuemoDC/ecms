@@ -1,6 +1,7 @@
 <template>
-  <div>
-    <AppNavbar /> <!-- 引入导航栏组件 -->
+  <AppNavbar @navigate="handleNavigation"/> <!-- 引入导航栏组件 -->
+  <div class="container">
+
     <h1>产品管理</h1> <!-- 页面标题 -->
 
     <el-input
@@ -99,7 +100,8 @@
 <script>
 import axios from 'axios'; // 引入 axios 库进行 HTTP 请求
 import { ElMessage } from 'element-plus'; // 引入 Element Plus 的消息组件
-import AppMerchantNavbar from "@/components/MerchantNavbar.vue"; // 引入导航栏组件
+import AppMerchantNavbar from "@/components/MerchantNavbar.vue";
+import {gsap} from "gsap"; // 引入导航栏组件
 
 export default {
   name: 'ProductManagement', // 组件名称
@@ -123,6 +125,41 @@ export default {
     };
   },
   methods: {
+    enterAnimation() {
+      const tl = gsap.timeline();
+
+      // 设置初始状态
+      gsap.set(".container", {
+        opacity: 0,
+        y: 50
+      });
+
+      // 创建入场动画
+      tl.to(".container", {
+        duration: 0.8,
+        opacity: 1,
+        y: 0,
+        ease: "power4.out"
+      });
+    },
+    async handleNavigation(path) {
+      await this.leaveAnimation();
+      this.$router.push(path);
+    },
+    leaveAnimation() {
+      return new Promise((resolve) => {
+        const tl = gsap.timeline();
+
+        // 使用更精确的选择器
+        tl.to(".container", {
+          duration: 0.8,
+          opacity: 0,
+          y: 100,
+          ease: "power4.in"
+        })
+            .eventCallback("onComplete", resolve);
+      });
+    },
     fetchProducts() {
       // 获取所有产品
       const url = 'http://localhost:8080/api/products';
@@ -237,6 +274,7 @@ export default {
   },
   mounted() {
     this.fetchProducts(); // 初始加载所有产品
+    this.enterAnimation();
   }
 };
 </script>

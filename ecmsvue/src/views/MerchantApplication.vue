@@ -1,6 +1,7 @@
 <template>
-  <div>
-    <AppNavbar /> <!-- 引入导航栏组件 -->
+  <AppNavbar @navigate="handleNavigation"/> <!-- 引入导航栏组件 -->
+  <div class="container">
+
     <el-container>
       <el-header>
         <h2>商家入驻申请</h2>
@@ -110,7 +111,8 @@
 import { ref, onMounted } from 'vue';
 import { ElMessage } from 'element-plus';
 import axios from 'axios';
-import AppAdminNavbar from "@/components/MerchantNavbar.vue"; // 引入导航栏组件
+import AppAdminNavbar from "@/components/MerchantNavbar.vue";
+import {gsap} from "gsap"; // 引入导航栏组件
 
 export default {
   name: 'MerchantApplication',
@@ -333,6 +335,46 @@ export default {
       filterByStatus,
     };
   },
+  methods:{
+    enterAnimation() {
+      const tl = gsap.timeline();
+
+      // 设置初始状态
+      gsap.set(".container", {
+        opacity: 0,
+        y: 50
+      });
+
+      // 创建入场动画
+      tl.to(".container", {
+        duration: 0.8,
+        opacity: 1,
+        y: 0,
+        ease: "power4.out"
+      });
+    },
+    async handleNavigation(path) {
+      await this.leaveAnimation();
+      this.$router.push(path);
+    },
+    leaveAnimation() {
+      return new Promise((resolve) => {
+        const tl = gsap.timeline();
+
+        // 使用更精确的选择器
+        tl.to(".container", {
+          duration: 0.8,
+          opacity: 0,
+          y: 100,
+          ease: "power4.in"
+        })
+            .eventCallback("onComplete", resolve);
+      });
+    },
+  },
+  mounted () {
+    this.enterAnimation();
+  }
 };
 </script>
 

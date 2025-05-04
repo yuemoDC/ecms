@@ -81,7 +81,7 @@ export default {
       localStorage.removeItem('token'); // 清除本地存储中的 token
       localStorage.removeItem('activeIndex'); // 清除保存的状态
       this.activeIndex = 'home'; // 设置默认的激活菜单项
-      this.$router.push('/login'); // 跳转到登录页面
+      this.$router.push('/OutScreen'); // 跳转到登录页面
     },
     handleSubmenuClick() {
       this.$emit('navigate', '/AIhome'); // 改为通过navigate事件触发

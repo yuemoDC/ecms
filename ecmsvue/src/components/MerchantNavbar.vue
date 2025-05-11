@@ -11,13 +11,9 @@
         <el-menu-item index="products">产品管理</el-menu-item>
         <el-menu-item index="orders">订单管理</el-menu-item>
         <el-menu-item index="merchant-application">商家入驻申请</el-menu-item>
-
-<!--        <div class="logout-wrapper">-->
-<!--          <div class="theme-toggle" @click="toggleTheme">-->
-<!--            {{ isDark ? '☀️ 日间模式' : '🌙 夜间模式' }}-->
-<!--          </div>-->
+        <el-menu-item index="merchant-sales">数据分析</el-menu-item>
+        <el-menu-item index="merchant-prediction">商家AI预测</el-menu-item>
         <el-menu-item index="logout" @click="handleLogout">登出</el-menu-item>
-<!--        </div>-->
       </el-menu>
     </div>
   </el-header>
@@ -51,7 +47,9 @@ export default {
         '/home': 'home',
         '/products': 'products',
         '/orders': 'orders',
-        '/merchant-application': 'merchant-application'
+        '/merchant-application': 'merchant-application',
+        '/merchant-sales': 'merchant-sales',
+        '/merchant-prediction': 'merchant-prediction'
       };
       this.activeIndex = indexMap[path] || '';
       localStorage.setItem('activeIndex', this.activeIndex);
@@ -63,7 +61,9 @@ export default {
         'home': '/home',
         'products': '/products',
         'orders': '/orders',
-        'merchant-application': '/merchant-application'
+        'merchant-application': '/merchant-application',
+        'merchant-sales': '/merchant-sales',
+        'merchant-prediction': '/merchant-prediction'
       };
 
       this.$emit('navigate', routeMap[index] || '/home');

@@ -54,6 +54,7 @@
 
         <!-- 添加/编辑商家入驻申请表单 -->
         <el-dialog
+            append-to-body
             :title="newApplication.applicationId ? '编辑商家入驻申请' : '新增商家入驻申请'"
             v-model="dialogVisible"
             width="40%"

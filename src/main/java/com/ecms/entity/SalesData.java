@@ -3,9 +3,11 @@ package com.ecms.entity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import com.fasterxml.jackson.annotation.JsonFormat;
 
 import java.math.BigDecimal;
 import java.util.Date;
+import java.util.Map;
 
 @Getter
 @Setter
@@ -22,6 +24,7 @@ public class SalesData {
 
     @Temporal(TemporalType.DATE)
     @Column(nullable = false)
+    @JsonFormat(pattern = "yyyy-MM-dd") // 自定义日期格式（可选）
     private Date salesDate;
 
     @Column(nullable = false, precision = 14, scale = 2)
@@ -33,8 +36,12 @@ public class SalesData {
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal avgOrderValue;
 
-    @Column(columnDefinition = "JSON")
-    private String regionSales;  // 区域销售分布
+    @ElementCollection
+    @CollectionTable(name = "region_sales", joinColumns = @JoinColumn(name = "sales_id"))
+    @MapKeyColumn(name = "region")
+    @Column(name = "sales_count")
+    private Map<String, Integer> regionSales;  // 区域销售分布，使用Map类型
+
 
 
     // 添加 productId 字段

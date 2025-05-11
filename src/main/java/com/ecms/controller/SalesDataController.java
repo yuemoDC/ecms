@@ -9,7 +9,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/sales")
-@CrossOrigin(origins = "http://localhost:8081") // 允许来自 http://localhost:8081 的请求
+@CrossOrigin(origins = "http://localhost:8082") // 允许来自 http://localhost:8081 的请求
 public class SalesDataController {
 
     @Autowired

@@ -10,7 +10,7 @@ import java.util.Map; // 导入 Map 接口
 
 @RestController // 声明这是一个 REST 控制器
 @RequestMapping("/api/auth") // 映射所有请求的基本路径为 /api/auth
-@CrossOrigin(origins = "http://localhost:8081") // 允许来自 http://localhost:8081 的跨域请求
+@CrossOrigin(origins = "http://localhost:8082") // 允许来自 http://localhost:8081 的跨域请求
 public class UserController {
 
     @Autowired // 自动注入 UserService 的实例

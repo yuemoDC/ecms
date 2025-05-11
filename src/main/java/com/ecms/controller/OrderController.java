@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.*; // 导入所有 Spring 的 Web
 import java.util.List; // 导入 List 集合
 import org.springframework.beans.factory.annotation.Autowired; // 导入 @Autowired 注释
 
-@CrossOrigin(origins = "http://localhost:8081") // 允许来自 http://localhost:8081 的跨域请求
+@CrossOrigin(origins = "http://localhost:8082") // 允许来自 http://localhost:8081 的跨域请求
 @RestController // 声明这个类是一个 REST 控制器
 @RequestMapping("/api/orders") // 映射所有请求的基本路径为 /api/orders
 public class OrderController {

@@ -39,6 +39,7 @@
     <!-- 产品表单对话框 -->
     <el-dialog
         v-model="dialogVisible"
+        append-to-body
     :title="selectedProduct ? '编辑产品' : '添加产品'"
     width="50%"
     @close="clearForm"

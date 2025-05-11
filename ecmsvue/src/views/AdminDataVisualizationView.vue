@@ -35,6 +35,8 @@
         </div>
       </div>
 
+
+
       <!-- 销售概览卡片 -->
       <el-row :gutter="24" class="dashboard-cards">
         <el-col :xs="24" :sm="12" :md="8" :lg="6" :xl="4">
@@ -221,8 +223,8 @@ import { ElMessage, ElNotification } from 'element-plus';
 import { Refresh } from '@element-plus/icons-vue';
 import * as echarts from 'echarts';
 import axios from 'axios';
-import AppAdminNavbar from "@/components/AdminNavbar.vue";
 import {gsap} from "gsap";
+import AppAdminNavbar from "@/components/AdminNavbar.vue";
 
 export default {
   name: 'AdminDataVisualizationView',
@@ -1127,6 +1129,10 @@ export default {
   methods:{
     initAnimations() {
       // 卡片逐个闪烁动画
+      gsap.to(".dashboard-cards",{
+        opacity: 1,
+        duration: 1,
+      })
       gsap.fromTo(".data-card",
           {
             opacity: 0,
@@ -1199,7 +1205,7 @@ export default {
     leaveAnimation() {
       return new Promise((resolve) => {
         gsap.to(".admin-visualization-view", {
-          duration: 0.2,
+          duration: 0.5,
           opacity: 0,
           y: 100,
           ease: "power4.in",
@@ -1214,7 +1220,6 @@ export default {
 <style scoped>
 .admin-visualization-view {
   padding: 20px;
-  will-change: transform, opacity;
 }
 
 .view-header {
@@ -1247,14 +1252,12 @@ export default {
 
 .dashboard-cards {
   margin-bottom: 20px;
+  opacity: 0;
 }
 
 .data-card {
   margin-bottom: 20px;
   height: 100%;
-  transform: translateZ(0);
-  backface-visibility: hidden;
-  perspective: 1000px;
 }
 
 .card-header {
@@ -1276,33 +1279,11 @@ export default {
 
 .chart-selector {
   margin-bottom: 20px;
-  transform: translateZ(0);
-  backface-visibility: hidden;
-  perspective: 1000px;
 }
 
 .chart-card {
   margin-bottom: 20px;
   height: 100%;
-  transform: translateZ(0);
-  backface-visibility: hidden;
-  perspective: 1000px;
-}
-
-.data-card {
-  opacity: 0;
-}
-
-.chart-selector {
-  opacity: 0;
-}
-
-.chart-card {
-  opacity: 0;
-}
-
-.view-header {
-  opacity: 0;
 }
 
 .chart-container {
@@ -1342,10 +1323,5 @@ export default {
     font-size: 20px;
   }
 }
-@media (max-width: 768px) {
-  .data-card,
-  .chart-card {
-    transform: none !important;
-  }
-}
 </style>
+

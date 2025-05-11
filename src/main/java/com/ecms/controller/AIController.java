@@ -12,7 +12,7 @@ import java.util.*;
 
 @RestController
 @RequestMapping("/api/ai")
-@CrossOrigin(origins = "http://localhost:8081")  // 允许跨域访问
+@CrossOrigin(origins = "http://localhost:8082")  // 允许跨域访问
 public class AIController {
     private static final Logger logger = LoggerFactory.getLogger(AIController.class);
 

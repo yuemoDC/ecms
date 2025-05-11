@@ -8,7 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import java.util.List;
 
 @RestController
-@CrossOrigin(origins = "http://localhost:8081") // 允许来自 http://localhost:8081 的请求
+@CrossOrigin(origins = "http://localhost:8082") // 允许来自 http://localhost:8081 的请求
 @RequestMapping("/api/products")
 public class ProductController {
 

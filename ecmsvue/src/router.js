@@ -5,6 +5,7 @@ import HomePage from '../src/views/Home.vue';
 import UserLoginPage from './views/UserLogin.vue';
 import UserRegisterPage from './views/UserRegister.vue';
 import MerchantApplicationList from './views/MerchantApplicationList.vue';  // 商家入驻申请管理
+import MerchantSales from './views/MerchantSales.vue';
 import SalesPredictionView from './views/SalesPrediction.vue';
 import AdminDataVisualizationView from './views/AdminDataVisualizationView.vue'
 import MerchantApplication from "@/views/MerchantApplication.vue";
@@ -12,6 +13,7 @@ import BulkSalesPredictionView from'./views/BulkSalesPrediction.vue';
 import AIhome from "@/views/AIhome.vue";
 import SplashScreen from "@/animation/SplashScreen.vue";
 import OutScreen from "@/animation/OutScreen.vue";
+import MerchantPrediction  from "@/views/MerchantPrediction.vue";
 
 
 const routes = [
@@ -22,9 +24,21 @@ const routes = [
         meta: { requiresAuth: true }
     },
     {
+        path: '/merchant-prediction',
+        name: 'merchant-prediction',
+        component: MerchantPrediction,
+        meta: { requiresAuth: true }
+    },
+    {
         path: '/orders',
         name: 'orders',
         component: OrdersPage,
+        meta: { requiresAuth: true }
+    },
+    {
+        path: '/merchant-sales',
+        name: 'merchant-sales',
+        component: MerchantSales,
         meta: { requiresAuth: true }
     },
     {

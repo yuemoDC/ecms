@@ -8,6 +8,7 @@
           mode="horizontal"
       >
         <el-menu-item index="home">首页</el-menu-item>
+<!--        <el-menu-item index="mehome">我的店铺</el-menu-item>-->
         <el-menu-item index="products">产品管理</el-menu-item>
         <el-menu-item index="orders">订单管理</el-menu-item>
         <el-menu-item index="merchant-application">商家入驻申请</el-menu-item>
@@ -55,6 +56,11 @@ export default {
       localStorage.setItem('activeIndex', this.activeIndex);
     },
     handleSelect(index) {
+      // 如果点击的是当前已激活的菜单项，则不执行任何操作
+      if (index === this.activeIndex) {
+        return;
+      }
+
       if (index === 'logout') return;
 
       const routeMap = {
@@ -63,7 +69,8 @@ export default {
         'orders': '/orders',
         'merchant-application': '/merchant-application',
         'merchant-sales': '/merchant-sales',
-        'merchant-prediction': '/merchant-prediction'
+        'merchant-prediction': '/merchant-prediction',
+        'mehome': '/mehome',
       };
 
       this.$emit('navigate', routeMap[index] || '/home');

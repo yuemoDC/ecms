@@ -60,6 +60,11 @@ export default {
       localStorage.setItem('activeIndex', this.activeIndex); // 更新 localStorage
     },
     handleSelect(index) {
+      // 如果点击的是当前已激活的菜单项，则不执行任何操作
+      if (index === this.activeIndex) {
+        return;
+      }
+
       if (index === 'logout') return;
 
       // 修正路由名称映射

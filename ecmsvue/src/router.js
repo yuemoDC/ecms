@@ -14,6 +14,7 @@ import AIhome from "@/views/AIhome.vue";
 import SplashScreen from "@/animation/SplashScreen.vue";
 import OutScreen from "@/animation/OutScreen.vue";
 import MerchantPrediction  from "@/views/MerchantPrediction.vue";
+import MeHome from "@/views/MeHome.vue";
 
 
 const routes = [
@@ -104,6 +105,11 @@ const routes = [
         path: '/OutScreen',
         name: 'OutScreen',
         component: OutScreen,
+    },
+    {
+        path:'/Mehome',
+        name: 'Mehome',
+        component: MeHome,
     }
 ];
 

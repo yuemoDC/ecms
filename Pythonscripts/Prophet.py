@@ -24,7 +24,7 @@ file_path = os.path.join(base_dir, filename)
 conn = mysql.connector.connect(
     host='localhost',
     user='root',
-    password='Guy9nzh9ng123!',
+    password='123456',
     database='ecms',
     use_pure=True
 )

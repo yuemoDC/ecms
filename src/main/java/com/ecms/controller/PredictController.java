@@ -30,7 +30,7 @@ public class PredictController {
         try {
             String currentDir = System.getProperty("user.dir");
             String pythonScriptPath = currentDir + "/Pythonscripts/Prophet.py";
-            String pythonExe = "D:\\anaconda\\envs\\pyspark\\python.exe";
+            String pythonExe = "D:\\APP\\anaconda\\envs\\pyspark\\python.exe";
 
             // 运行 Python 脚本进行预测
             String command = pythonExe + " " + pythonScriptPath + " " + merchantId + " " + days;

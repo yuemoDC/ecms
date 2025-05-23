@@ -73,6 +73,7 @@
           :title="newApplication.applicationId ? '编辑商家入驻申请' : '新增商家入驻申请'"
           v-model="dialogVisible"
           width="40%"
+          append-to-body
       >
         <el-form :model="newApplication">
           <el-form-item label="商家名称" prop="merchantName">

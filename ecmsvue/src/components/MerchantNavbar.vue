@@ -8,9 +8,9 @@
           mode="horizontal"
       >
         <el-menu-item index="home">首页</el-menu-item>
-<!--        <el-menu-item index="mehome">我的店铺</el-menu-item>-->
-        <el-menu-item index="products">产品管理</el-menu-item>
-        <el-menu-item index="orders">订单管理</el-menu-item>
+        <el-menu-item index="mehome">我的店铺</el-menu-item>
+<!--        <el-menu-item index="products">产品管理</el-menu-item>-->
+<!--        <el-menu-item index="orders">订单管理</el-menu-item>-->
         <el-menu-item index="merchant-application">商家入驻申请</el-menu-item>
         <el-menu-item index="merchant-sales">数据分析</el-menu-item>
         <el-menu-item index="merchant-prediction">商家AI预测</el-menu-item>
@@ -46,6 +46,7 @@ export default {
       const path = this.$route.path;
       const indexMap = {
         '/home': 'home',
+        '/mehome': 'mehome',
         '/products': 'products',
         '/orders': 'orders',
         '/merchant-application': 'merchant-application',

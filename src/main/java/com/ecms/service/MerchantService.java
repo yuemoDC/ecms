@@ -1,4 +1,3 @@
-// com/ecms/service/MerchantService.java
 package com.ecms.service;
 
 import com.ecms.entity.Merchant;
@@ -35,5 +34,17 @@ public class MerchantService {
 
     public void deleteMerchant(Integer id) {
         merchantRepository.deleteById(id);
+    }
+
+    /**
+     * 根据用户ID获取商家ID
+     *
+     * @param userId 用户ID
+     * @return 商家ID，如果用户不是商家则返回null
+     */
+    public Integer getMerchantIdByUserId(Integer userId) {
+        // 根据用户ID查询商家
+        Merchant merchant = merchantRepository.findByUserId(userId);
+        return merchant != null ? merchant.getMerchantId() : null;
     }
 }

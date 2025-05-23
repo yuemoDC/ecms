@@ -1,4 +1,3 @@
-// com/ecms/controller/MerchantController.java
 package com.ecms.controller;
 
 import com.ecms.entity.Merchant;
@@ -7,14 +6,17 @@ import com.ecms.dto.MerchantDTO;
 import com.ecms.service.MerchantApplicationService;
 import com.ecms.service.MerchantService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/merchants")
-@CrossOrigin(origins = "http://localhost:8082") // 允许来自 http://localhost:8081 的请求
+@CrossOrigin(origins = "http://localhost:8081") // 允许来自 http://localhost:8081 的请求
 public class MerchantController {
 
     @Autowired
@@ -68,5 +70,24 @@ public class MerchantController {
     @DeleteMapping("/{id}")
     public void deleteMerchant(@PathVariable Integer id) {
         merchantService.deleteMerchant(id);
+    }
+
+    /**
+     * 根据用户ID获取商家ID - 简单的API端点
+     */
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<?> getMerchantIdByUserId(@PathVariable Integer userId) {
+        Integer merchantId = merchantService.getMerchantIdByUserId(userId);
+
+        Map<String, Object> response = new HashMap<>();
+        if (merchantId != null) {
+            response.put("success", true);
+            response.put("merchantId", merchantId);
+            return ResponseEntity.ok(response);
+        } else {
+            response.put("success", false);
+            response.put("message", "未找到对应的商家信息");
+            return ResponseEntity.ok(response);
+        }
     }
 }
